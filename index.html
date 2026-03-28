@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gratta e Vinci Ristorante</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <!-- Libreria per i coriandoli -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <img src="logo_pub.png" alt="Logo Pub" class="brand-logo">
+        <h1 class="golden-title">Gratta e Vinci</h1>
+        <p class="subtitle" id="main-subtitle">Tenta la fortuna mentre bevi la tua birra!</p>
+
+        <!-- Form di Lead Generation -->
+        <div id="lead-form-container" class="form-container">
+            <p class="form-desc">Inserisci i tuoi dati per sbloccare la tua scheda speciale.</p>
+            <form id="lead-form">
+                <input type="text" id="user-name" placeholder="Il tuo Nome" required>
+                <input type="email" id="user-email" placeholder="La tua Email" required>
+                <button type="submit" class="gold-button">Richiedi la Scheda</button>
+            </form>
+        </div>
+
+        <!-- Area Gratta e Vinci (Inizialmente Nascosta) -->
+        <div id="scratch-container" class="scratch-container" style="display: none;">
+            <div class="prize-text" id="prize-text">?</div>
+            <canvas id="scratch-canvas" width="300" height="150"></canvas>
+        </div>
+
+        <!-- Pulsante "Gioca ancora" (Nascosto) -->
+        <button id="play-again-btn" class="gold-button"
+            style="display: none; margin-top: 2rem; margin-left: auto; margin-right: auto;">Gioca Ancora</button>
+
+        <!-- Audio applauso (Formato MP3) -->
+        <audio id="applause-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"
+            preload="auto"></audio>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
