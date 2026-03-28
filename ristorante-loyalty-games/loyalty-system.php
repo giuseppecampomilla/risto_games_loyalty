@@ -192,45 +192,24 @@ function ristoloyalty_game_shortcode() {
         // --- RUOTA DELLA FORTUNA ---
         RistoGame.prototype.initWheel = function() {
             var self = this;
-            var wrap = document.createElement('div');
-            wrap.className = 'rl-wheel-wrapper';
-            wrap.innerHTML = '<div class="rl-wheel-pointer"></div>' +
-                '<canvas id="rl-wheel-canvas" width="220" height="220"></canvas>' +
-                '<button class="rl-gold-button" id="rl-spin-btn">GIRA!</button>';
-            this.container.appendChild(wrap);
+            var wheelTarget = document.createElement('div');
+            wheelTarget.id = 'rl-wheel-target';
+            this.container.appendChild(wheelTarget);
 
-            var prizeDiv = document.createElement('div');
-            prizeDiv.id = 'rl-prize-label';
-            prizeDiv.style.cssText = 'display:none;font-size:1.5rem;font-weight:900;color:#FFD700;margin-top:1rem;';
-            prizeDiv.textContent = this.prize || '';
-            this.container.appendChild(prizeDiv);
-
-            var cvs = document.getElementById('rl-wheel-canvas');
-            var ctx = cvs.getContext('2d');
-            var colors = ['#e74c3c','#f1c40f','#2ecc71','#3498db','#9b59b6','#e67e22'];
-            var arc = Math.PI * 2 / 6;
-            for (var i = 0; i < 6; i++) {
-                ctx.beginPath(); ctx.fillStyle = colors[i];
-                ctx.moveTo(110,110); ctx.arc(110,110,108, i*arc, (i+1)*arc); ctx.fill();
+            if (typeof RistoWheelGame !== 'undefined') {
+                var wGame = new RistoWheelGame('rl-wheel-target', RistoLoyalty.prizes);
+                wGame.init();
+                wGame.onSpinClick(function() {
+                    if (self.isRevealed) return;
+                    wGame.spinTo(self.prize || '', function() {
+                        self.onReveal();
+                        // Mostra l'alert verde da AJAX (che era nascosto sotto al div point)
+                        // Ma onReveal lancia già i confetti
+                    });
+                });
+            } else {
+                this.container.innerHTML = "<p>Errore: wheel-game.js non caricato.</p>";
             }
-            ctx.fillStyle = '#fff'; ctx.font = '700 14px sans-serif'; ctx.textAlign = 'center';
-            var labels = ['1','2','3','4','5','6'];
-            for (var j = 0; j < 6; j++) {
-                ctx.save(); ctx.translate(110,110);
-                ctx.rotate((j + 0.5) * arc);
-                ctx.fillText(labels[j], 0, -80); ctx.restore();
-            }
-
-            document.getElementById('rl-spin-btn').addEventListener('click', function() {
-                if (self.isRevealed) return;
-                this.disabled = true;
-                var deg = 360 * 6 + Math.floor(Math.random() * 360);
-                cvs.style.transform = 'rotate(' + deg + 'deg)';
-                setTimeout(function() {
-                    prizeDiv.style.display = 'block';
-                    self.onReveal();
-                }, 4100);
-            });
         };
 
         // --- SLOT MACHINE ---

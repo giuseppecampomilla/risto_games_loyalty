@@ -454,10 +454,23 @@ function ristorante_loyalty_enqueue_scripts() {
     wp_enqueue_style( 'ristorante-loyalty-style', plugin_dir_url( __FILE__ ) . 'public/css/style.css', array(), '1.0.0' );
     wp_enqueue_script( 'canvas-confetti', 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js', array(), null, true );
     wp_enqueue_script( 'ristorante-loyalty-gamesp', plugin_dir_url( __FILE__ ) . 'public/js/games-handler.js', array(), '1.0.0', true );
-    wp_enqueue_script( 'ristorante-loyalty-script', plugin_dir_url( __FILE__ ) . 'public/js/script.js', array('jquery', 'ristorante-loyalty-gamesp'), '1.0.0', true );
+    wp_enqueue_script( 'ristorante-loyalty-wheel', plugin_dir_url( __FILE__ ) . 'public/js/wheel-game.js', array(), '1.0.0', true );
+    wp_enqueue_script( 'ristorante-loyalty-script', plugin_dir_url( __FILE__ ) . 'public/js/script.js', array('jquery', 'ristorante-loyalty-gamesp', 'ristorante-loyalty-wheel'), '1.0.0', true );
+
+    // Estrai tutti i premi configurati
+    $prizes = array();
+    for ($i = 1; $i <= 3; $i++) {
+        $p = get_option('loyalty_prize_' . $i, '');
+        if (!empty($p)) $prizes[] = $p;
+        $m = get_option('loyalty_milestone_' . $i . '_prize', '');
+        if (!empty($m)) $prizes[] = '🏆 ' . $m;
+    }
+    if (empty($prizes)) $prizes = array('Sconto 10%', 'Sconto 20%', 'Bibita Gratis', 'Nessun Premio');
+    else $prizes[] = 'Ritenta';
 
     wp_localize_script( 'ristorante-loyalty-script', 'RistoLoyalty', array(
         'ajaxurl' => admin_url( 'admin-ajax.php' ),
-        'nonce'   => wp_create_nonce( 'ristoloyalty_nonce' )
+        'nonce'   => wp_create_nonce( 'ristoloyalty_nonce' ),
+        'prizes'  => $prizes
     ) );
 }
