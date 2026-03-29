@@ -36,7 +36,7 @@ class RistoGameHandler {
         this.isRevealed = true;
         
         // Mostra sempre il testo del premio quando vince o finisce il gioco
-        if(this.prizeText) this.prizeText.style.display = 'flex';
+        if(this.prizeText) this.prizeText.style.display = 'block';
         
         if(this.isWinner && typeof confetti !== 'undefined') {
             confetti({particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#FFD700', '#ffaa00', '#ffffff']});
@@ -124,12 +124,12 @@ class RistoGameHandler {
     // --- RUOTA DELLA FORTUNA ---
     initWheel() {
         this.container.innerHTML = `
-            <div style="position:relative; width:220px; height:220px; margin:auto;">
-                <canvas id="rl-game-canvas" width="220" height="220" style="transition: transform 3.5s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius:50%; border: 6px solid #FFD700; box-shadow: 0 0 15px rgba(255,215,0,0.5);"></canvas>
-                <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:25px solid #fff; z-index:3; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));"></div>
-                <button id="spin-btn" class="rl-gold-button" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding: 15px; z-index:4; border-radius:50%; width:80px; height:80px; font-weight:900;">GIRA</button>
+            <div style="position:relative; width:240px; height:240px; margin:auto; padding-top:20px; box-sizing:content-box;">
+                <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:25px solid #fff; z-index:3; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));"></div>
+                <canvas id="rl-game-canvas" width="240" height="240" style="display:block; transition: transform 3.5s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius:50%; border: 6px solid #FFD700; box-shadow: 0 0 15px rgba(255,215,0,0.5);"></canvas>
+                <button id="spin-btn" class="rl-gold-button" style="position:absolute; top:calc(50% + 10px); left:50%; transform:translate(-50%,-50%); padding: 15px; z-index:4; border-radius:50%; width:80px; height:80px; font-weight:900;">GIRA</button>
             </div>
-            <div class="rl-prize-text" id="rl-prize-text" style="display:none; position:relative; margin-top:2rem;"></div>
+            <div class="rl-prize-text" id="rl-prize-text" style="display:none; position:static; margin-top:1.5rem; text-align:center; padding-bottom:1rem;"></div>
         `;
         this.prizeText = document.getElementById('rl-prize-text');
         this.prizeText.textContent = this.prizeStr;
@@ -143,9 +143,9 @@ class RistoGameHandler {
         for(let i=0; i<slices; i++) {
             this.ctx.beginPath();
             this.ctx.fillStyle = colors[i];
-            this.ctx.moveTo(110, 110);
-            this.ctx.arc(110, 110, 110, i * arc, (i + 1) * arc);
-            this.ctx.lineTo(110, 110);
+            this.ctx.moveTo(120, 120);
+            this.ctx.arc(120, 120, 120, i * arc, (i + 1) * arc);
+            this.ctx.lineTo(120, 120);
             this.ctx.fill();
         }
 
