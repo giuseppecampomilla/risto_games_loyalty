@@ -1,6 +1,74 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+// =========================================================
+// HELPER: Genera codice univoco casuale
+// =========================================================
+function ristoloyalty_generate_unique_code() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'loyalty_redemptions';
+    do {
+        $code = strtoupper( substr( bin2hex( random_bytes(5) ), 0, 8 ) );
+        $exists = $wpdb->get_var( $wpdb->prepare("SELECT COUNT(*) FROM $table WHERE codice_univoco = %s", $code) );
+    } while ( $exists > 0 );
+    return $code;
+}
+
+// =========================================================
+// LEADERBOARD: Top 10 per punti
+// =========================================================
+function ristoloyalty_get_leaderboard( $limit = 10 ) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'loyalty_customers';
+    return $wpdb->get_results(
+        $wpdb->prepare("SELECT nome, punti FROM $table ORDER BY punti DESC LIMIT %d", $limit)
+    );
+}
+
+// Shortcode Leaderboard
+add_shortcode('loyalty_leaderboard', 'ristoloyalty_leaderboard_shortcode');
+function ristoloyalty_leaderboard_shortcode() {
+    $leaders = ristoloyalty_get_leaderboard(10);
+
+    $c_bg     = get_option('loyalty_color_bg',     '#080808');
+    $c_accent = get_option('loyalty_color_accent', '#FFD700');
+    $c_text   = get_option('loyalty_color_text',   '#ffffff');
+    $c_card   = get_option('loyalty_color_card',   '#1a1a1a');
+
+    ob_start();
+    ?>
+    <style>
+    .rl-leaderboard{max-width:480px;margin:0 auto;font-family:'Outfit',sans-serif;background:<?php echo esc_attr($c_bg); ?>;border-radius:20px;padding:2rem;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid rgba(255,215,0,.15);}
+    .rl-leaderboard h2{color:<?php echo esc_attr($c_accent); ?>;text-align:center;font-size:1.8rem;font-weight:900;margin:0 0 1.5rem;}
+    .rl-lb-row{display:flex;align-items:center;gap:.8rem;background:<?php echo esc_attr($c_card); ?>;border-radius:12px;padding:.8rem 1rem;margin-bottom:.6rem;}
+    .rl-lb-rank{font-size:1.4rem;font-weight:900;min-width:2rem;text-align:center;color:<?php echo esc_attr($c_accent); ?>;}
+    .rl-lb-rank.gold{color:#FFD700;} .rl-lb-rank.silver{color:#C0C0C0;} .rl-lb-rank.bronze{color:#CD7F32;}
+    .rl-lb-name{flex:1;color:<?php echo esc_attr($c_text); ?>;font-weight:600;font-size:1rem;}
+    .rl-lb-pts{background:<?php echo esc_attr($c_accent); ?>;color:#000;font-weight:900;padding:4px 12px;border-radius:20px;font-size:.95rem;}
+    .rl-lb-empty{text-align:center;color:<?php echo esc_attr($c_text); ?>;opacity:.5;padding:2rem 0;}
+    </style>
+    <div class="rl-leaderboard">
+        <h2>🏆 Classifica Punti</h2>
+        <?php if ( empty($leaders) ) : ?>
+            <p class="rl-lb-empty">Nessun giocatore ancora.</p>
+        <?php else : ?>
+            <?php foreach ( $leaders as $i => $row ) :
+                $rank = $i + 1;
+                $rankClass = $rank === 1 ? 'gold' : ($rank === 2 ? 'silver' : ($rank === 3 ? 'bronze' : ''));
+                $medal = $rank === 1 ? '🥇' : ($rank === 2 ? '🥈' : ($rank === 3 ? '🥉' : $rank));
+            ?>
+            <div class="rl-lb-row">
+                <div class="rl-lb-rank <?php echo esc_attr($rankClass); ?>"><?php echo $medal; ?></div>
+                <div class="rl-lb-name"><?php echo esc_html($row->nome); ?></div>
+                <div class="rl-lb-pts"><?php echo esc_html($row->punti); ?> pt</div>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
 // Shortcode per il Gioco
 add_shortcode('loyalty_game', 'ristoloyalty_game_shortcode');
 function ristoloyalty_game_shortcode() {
@@ -55,6 +123,13 @@ function ristoloyalty_game_shortcode() {
     /* Slot */
     .rl-slot-wrapper{display:flex;justify-content:center;gap:12px;margin-bottom:1.5rem;}
     .rl-slot-reel{width:75px;height:75px;background:#fff;border-radius:10px;font-size:42px;display:flex;align-items:center;justify-content:center;border:3px solid var(--rl-accent);box-shadow:inset 0 0 10px rgba(0,0,0,.3);}
+    /* Redemption Box */
+    .rl-code-box{background:var(--rl-card);border:2px dashed var(--rl-accent);border-radius:14px;padding:1.2rem 1.5rem;margin:1.2rem auto 0;max-width:340px;text-align:center;}
+    .rl-code-box p{margin:0 0 .5rem;font-size:.9rem;opacity:.8;}
+    .rl-code-value{font-size:2rem;font-weight:900;letter-spacing:.3em;color:var(--rl-accent);display:block;margin-bottom:.8rem;}
+    .rl-redemption-form{margin-top:1rem;}
+    .rl-redemption-form input{background:var(--rl-card);border:1px solid #555;color:var(--rl-text);padding:.7rem 1rem;border-radius:10px;font-size:1rem;width:100%;box-sizing:border-box;margin-bottom:.6rem;font-family:inherit;text-align:center;letter-spacing:.2em;}
+    .rl-redemption-msg{margin-top:.6rem;font-weight:700;font-size:.95rem;}
     </style>
 
     <div id="ristoloyalty-app" class="rl-container">
@@ -74,6 +149,18 @@ function ristoloyalty_game_shortcode() {
         </div>
         <div id="rl-game-container" style="display:none;" data-game-type="<?php echo esc_attr($game_type); ?>"></div>
 
+        <!-- Codice Riscatto (mostrato solo in caso di vincita) -->
+        <div id="rl-code-section" style="display:none;" class="rl-code-box">
+            <p>🎉 Hai vinto! Mostra questo codice al cameriere:</p>
+            <span id="rl-code-value" class="rl-code-value">--------</span>
+            <p style="font-size:.8rem;opacity:.6;">Il cameriere inserirà il PIN per confermare il riscatto.</p>
+            <div class="rl-redemption-form">
+                <input type="text" id="rl-pin-input" placeholder="PIN Cameriere" maxlength="8" inputmode="numeric" />
+                <button class="rl-gold-button" id="rl-redeem-btn" style="width:100%;">✅ Riscatta Premio</button>
+                <div id="rl-redemption-msg" class="rl-redemption-msg"></div>
+            </div>
+        </div>
+
         <button id="rl-play-again-btn" class="rl-gold-button" style="display:none;margin-top:1.5rem;">🔄 Gioca Ancora</button>
         <audio id="rl-applause-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
     </div>
@@ -86,6 +173,7 @@ function ristoloyalty_game_shortcode() {
         var AJAX_URL = '<?php echo esc_js($ajaxurl); ?>';
         var NONCE    = '<?php echo esc_js($nonce); ?>';
         var gameHandler = null;
+        var currentCode = '';
 
         // =========================================================
         // GAMES HANDLER
@@ -275,7 +363,12 @@ function ristoloyalty_game_shortcode() {
             var form = document.getElementById('rl-lead-form');
             var submitBtn = document.getElementById('rl-submit-btn');
             var playAgainBtn = document.getElementById('rl-play-again-btn');
+            var codeSection = document.getElementById('rl-code-section');
+            var redeemBtn = document.getElementById('rl-redeem-btn');
+            var pinInput = document.getElementById('rl-pin-input');
+            var redemptionMsg = document.getElementById('rl-redemption-msg');
 
+            // --- FORM GIOCO ---
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 var name  = document.getElementById('rl-name').value;
@@ -309,6 +402,18 @@ function ristoloyalty_game_shortcode() {
                             gameHandler = new RistoGame('rl-game-container', gameType);
                             gameHandler.init(data.is_winner, data.prize);
 
+                            // Mostra codice riscatto se vincita
+                            if (data.is_winner && data.codice_univoco) {
+                                currentCode = data.codice_univoco;
+                                document.getElementById('rl-code-value').textContent = data.codice_univoco;
+                                codeSection.style.display = 'block';
+                                redemptionMsg.textContent = '';
+                                pinInput.value = '';
+                                redeemBtn.disabled = false;
+                            } else {
+                                codeSection.style.display = 'none';
+                            }
+
                         } else {
                             alert('Errore: ' + (resp.data ? resp.data.message : 'Riprova.'));
                         }
@@ -322,13 +427,50 @@ function ristoloyalty_game_shortcode() {
                          '&email=' + encodeURIComponent(email));
             });
 
+            // --- RISCATTA PREMIO ---
+            redeemBtn.addEventListener('click', function() {
+                var pin = pinInput.value.trim();
+                if (!pin || !currentCode) return;
+                redeemBtn.disabled = true;
+                redemptionMsg.style.color = '#aaa';
+                redemptionMsg.textContent = 'Verifica in corso...';
+
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open('POST', AJAX_URL);
+                xhr2.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+                xhr2.onload = function() {
+                    var resp2 = JSON.parse(xhr2.responseText);
+                    if (resp2.success) {
+                        redemptionMsg.style.color = '#4caf50';
+                        redemptionMsg.textContent = '✅ ' + resp2.data.message;
+                        redeemBtn.disabled = true;
+                        pinInput.disabled = true;
+                    } else {
+                        redemptionMsg.style.color = '#f44336';
+                        redemptionMsg.textContent = '❌ ' + (resp2.data ? resp2.data.message : 'Errore.');
+                        redeemBtn.disabled = false;
+                    }
+                };
+                xhr2.onerror = function() {
+                    redemptionMsg.style.color = '#f44336';
+                    redemptionMsg.textContent = '❌ Errore di rete.';
+                    redeemBtn.disabled = false;
+                };
+                xhr2.send('action=ristoloyalty_redeem&nonce=' + encodeURIComponent(NONCE) +
+                          '&codice=' + encodeURIComponent(currentCode) +
+                          '&pin=' + encodeURIComponent(pin));
+            });
+
+            // --- GIOCA ANCORA ---
             playAgainBtn.addEventListener('click', function() {
                 document.getElementById('rl-game-container').style.display = 'none';
                 playAgainBtn.style.display = 'none';
                 document.getElementById('rl-alert').style.display = 'none';
+                codeSection.style.display = 'none';
                 document.getElementById('rl-lead-form-container').style.display = 'flex';
                 if (gameHandler && gameHandler.container) gameHandler.container.innerHTML = '';
                 gameHandler = null;
+                currentCode = '';
             });
         });
     })();
@@ -496,10 +638,86 @@ function ristoloyalty_play_handler() {
         $wpdb->update( $table_name, array( 'premi_vinti' => wp_json_encode($premi_vinti_arr) ), array( 'email' => $email ) );
     }
 
+    // GENERA CODICE UNIVOCO per ogni vincita
+    $codice_univoco = '';
+    if ( $is_winner ) {
+        $codice_univoco = ristoloyalty_generate_unique_code();
+        $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+        $wpdb->insert( $redemptions_table, array(
+            'codice_univoco' => $codice_univoco,
+            'email'          => $email,
+            'premio'         => $won_prize,
+            'stato'          => 'pending',
+            'data_vincita'   => current_time('mysql'),
+        ) );
+    }
+
     wp_send_json_success( array(
-        'message'   => $msg,
-        'points'    => $points,
-        'is_winner' => $is_winner,
-        'prize'     => $won_prize
+        'message'        => $msg,
+        'points'         => $points,
+        'is_winner'      => $is_winner,
+        'prize'          => $won_prize,
+        'codice_univoco' => $codice_univoco,
     ) );
 }
+
+// =========================================================
+// AJAX: Riscatto Premio con PIN Cameriere
+// =========================================================
+add_action('wp_ajax_ristoloyalty_redeem', 'ristoloyalty_redeem_handler');
+add_action('wp_ajax_nopriv_ristoloyalty_redeem', 'ristoloyalty_redeem_handler');
+
+function ristoloyalty_redeem_handler() {
+    check_ajax_referer('ristoloyalty_nonce', 'nonce');
+
+    global $wpdb;
+    $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+
+    $codice = sanitize_text_field( $_POST['codice'] ?? '' );
+    $pin    = sanitize_text_field( $_POST['pin'] ?? '' );
+
+    if ( ! $codice || ! $pin ) {
+        wp_send_json_error( array('message' => 'Dati mancanti.') );
+        return;
+    }
+
+    // Verifica PIN cameriere
+    $correct_pin = get_option('loyalty_waiter_pin', '');
+    if ( empty($correct_pin) ) {
+        wp_send_json_error( array('message' => 'PIN cameriere non configurato. Contatta il ristorante.') );
+        return;
+    }
+    if ( $pin !== $correct_pin ) {
+        wp_send_json_error( array('message' => 'PIN non corretto. Riprova.') );
+        return;
+    }
+
+    // Cerca il codice
+    $redemption = $wpdb->get_row( $wpdb->prepare(
+        "SELECT * FROM $redemptions_table WHERE codice_univoco = %s",
+        $codice
+    ) );
+
+    if ( ! $redemption ) {
+        wp_send_json_error( array('message' => 'Codice non trovato.') );
+        return;
+    }
+
+    if ( $redemption->stato === 'claimed' ) {
+        wp_send_json_error( array('message' => 'Questo codice è già stato riscattato.') );
+        return;
+    }
+
+    // Aggiorna stato a 'claimed'
+    $wpdb->update(
+        $redemptions_table,
+        array( 'stato' => 'claimed', 'data_riscatto' => current_time('mysql') ),
+        array( 'codice_univoco' => $codice )
+    );
+
+    wp_send_json_success( array(
+        'message' => 'Premio riscattato con successo! Buon appetito 🍽️',
+        'premio'  => $redemption->premio,
+    ) );
+}
+

@@ -41,11 +41,23 @@ function ristorante_loyalty_create_table() {
         UNIQUE KEY email (email)
     ) $charset_collate;";
 
-    // Includiamo il file upgrade.php che contiene la funzione dbDelta
+    // Tabella riscatti premi
+    $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+    $sql2 = "CREATE TABLE $redemptions_table (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        codice_univoco varchar(20) NOT NULL,
+        email varchar(100) NOT NULL,
+        premio varchar(255) NOT NULL,
+        stato varchar(20) DEFAULT 'pending' NOT NULL,
+        data_vincita datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        data_riscatto datetime NULL,
+        PRIMARY KEY  (id),
+        UNIQUE KEY codice_univoco (codice_univoco)
+    ) $charset_collate;";
+
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-    
-    // dbDelta esegue la query e crea (o aggiorna) la tabella in modo sicuro
     dbDelta( $sql );
+    dbDelta( $sql2 );
 }
 
 /**
@@ -53,20 +65,45 @@ function ristorante_loyalty_create_table() {
  */
 add_action( 'admin_init', 'ristorante_loyalty_upgrade_db' );
 function ristorante_loyalty_upgrade_db() {
-    if ( get_option('loyalty_db_version', '1.0') >= '2.1' ) return;
     global $wpdb;
-    $table = $wpdb->prefix . 'loyalty_customers';
-    $cols = $wpdb->get_col("SHOW COLUMNS FROM $table");
-    if ( ! in_array('play_count', $cols) ) {
-        $wpdb->query("ALTER TABLE $table ADD COLUMN play_count INT DEFAULT 0");
+    $current_version = get_option('loyalty_db_version', '1.0');
+
+    // Upgrade a 2.1: aggiunge colonne play_count, period_start, premi_vinti
+    if ( version_compare($current_version, '2.1', '<') ) {
+        $table = $wpdb->prefix . 'loyalty_customers';
+        $cols = $wpdb->get_col("SHOW COLUMNS FROM $table");
+        if ( ! in_array('play_count', $cols) ) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN play_count INT DEFAULT 0");
+        }
+        if ( ! in_array('period_start', $cols) ) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN period_start DATETIME NULL");
+        }
+        if ( ! in_array('premi_vinti', $cols) ) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN premi_vinti LONGTEXT NULL");
+        }
+        update_option('loyalty_db_version', '2.1');
+        $current_version = '2.1';
     }
-    if ( ! in_array('period_start', $cols) ) {
-        $wpdb->query("ALTER TABLE $table ADD COLUMN period_start DATETIME NULL");
+
+    // Upgrade a 2.2: crea tabella loyalty_redemptions
+    if ( version_compare($current_version, '2.2', '<') ) {
+        $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+        $charset_collate   = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE $redemptions_table (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            codice_univoco varchar(20) NOT NULL,
+            email varchar(100) NOT NULL,
+            premio varchar(255) NOT NULL,
+            stato varchar(20) DEFAULT 'pending' NOT NULL,
+            data_vincita datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            data_riscatto datetime NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY codice_univoco (codice_univoco)
+        ) $charset_collate;";
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
+        update_option('loyalty_db_version', '2.2');
     }
-    if ( ! in_array('premi_vinti', $cols) ) {
-        $wpdb->query("ALTER TABLE $table ADD COLUMN premi_vinti LONGTEXT NULL");
-    }
-    update_option('loyalty_db_version', '2.1');
 }
 
 /**
@@ -93,6 +130,11 @@ function ristorante_loyalty_add_menu_pages() {
         'loyalty-games-main', 'Personalizzazione Grafica', '🎨 Grafica',
         'manage_options', 'loyalty-games-design', 'ristorante_loyalty_design_page'
     );
+    // Quarto sottomenu: PIN Cameriere & Riscatti
+    add_submenu_page(
+        'loyalty-games-main', 'PIN Cameriere & Riscatti', '🔑 Riscatti',
+        'manage_options', 'loyalty-games-redemptions', 'ristorante_loyalty_redemptions_page'
+    );
 }
 
 // Carica la Media Library di WP solo nella pagina grafica
@@ -108,6 +150,7 @@ function ristorante_loyalty_admin_scripts( $hook ) {
  */
 add_action( 'admin_init', 'ristorante_loyalty_register_settings' );
 function ristorante_loyalty_register_settings() {
+    register_setting( 'ristorante_loyalty_security', 'loyalty_waiter_pin' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_game_type' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_game_url' );
     // Punti e Premi Casuali
@@ -439,6 +482,79 @@ function ristorante_loyalty_customers_page() {
                     </tr>
                 <?php endforeach; else: ?>
                     <tr><td colspan="6">Nessun cliente registrato oppure plugin non ancora attivato.</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+}
+
+/**
+ * Pagina Admin: PIN Cameriere & Storico Riscatti
+ */
+function ristorante_loyalty_redemptions_page() {
+    global $wpdb;
+    $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+    ?>
+    <div class="wrap">
+        <h1>🔑 PIN Cameriere & Riscatti</h1>
+
+        <!-- Form PIN Cameriere -->
+        <div style="background:#fff;padding:20px;border:1px solid #ccd0d4;border-radius:4px;max-width:500px;margin-bottom:30px;">
+            <h2 style="margin-top:0;">🔐 Imposta PIN Cameriere</h2>
+            <p style="color:#555;">Questo PIN viene usato dal cameriere per confermare il riscatto del premio sul telefono del cliente.</p>
+            <form method="post" action="options.php">
+                <?php settings_fields( 'ristorante_loyalty_security' ); ?>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">PIN Cameriere (4–8 cifre)</th>
+                        <td>
+                            <input type="text" name="loyalty_waiter_pin"
+                                   value="<?php echo esc_attr( get_option('loyalty_waiter_pin', '') ); ?>"
+                                   maxlength="8" pattern="[0-9]{4,8}" placeholder="es. 1234"
+                                   style="width:120px;" required />
+                            <p class="description">Solo cifre, da 4 a 8 caratteri.</p>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button('Salva PIN'); ?>
+            </form>
+        </div>
+
+        <!-- Storico Riscatti -->
+        <h2>📋 Storico Codici Riscatto</h2>
+        <?php
+        $redemptions = $wpdb->get_results("SELECT * FROM $redemptions_table ORDER BY data_vincita DESC LIMIT 100");
+        ?>
+        <table class="wp-list-table widefat fixed striped" style="margin-top:10px;">
+            <thead>
+                <tr>
+                    <th>Codice</th>
+                    <th>Email</th>
+                    <th>Premio</th>
+                    <th>Stato</th>
+                    <th>Data Vincita</th>
+                    <th>Data Riscatto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ( $redemptions ) : foreach( $redemptions as $r ) : ?>
+                <tr>
+                    <td><code style="font-size:1.1em;font-weight:bold;"><?php echo esc_html($r->codice_univoco); ?></code></td>
+                    <td><?php echo esc_html($r->email); ?></td>
+                    <td><?php echo esc_html($r->premio); ?></td>
+                    <td>
+                        <?php if ( $r->stato === 'claimed' ) : ?>
+                            <span style="color:green;font-weight:bold;">✅ Riscattato</span>
+                        <?php else : ?>
+                            <span style="color:orange;font-weight:bold;">⏳ In attesa</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo esc_html(date_i18n('d/m/Y H:i', strtotime($r->data_vincita))); ?></td>
+                    <td><?php echo $r->data_riscatto ? esc_html(date_i18n('d/m/Y H:i', strtotime($r->data_riscatto))) : '—'; ?></td>
+                </tr>
+                <?php endforeach; else : ?>
+                    <tr><td colspan="6">Nessun codice generato finora.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
