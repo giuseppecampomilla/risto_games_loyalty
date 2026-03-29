@@ -214,6 +214,15 @@ function ristoloyalty_game_shortcode() {
                 var au = document.getElementById('rl-applause-sound');
                 if (au) { au.currentTime = 0; au.play().catch(function(){}); }
             }
+
+            // Mostra il codice riscatto DOPO la fine dell'animazione
+            if (this.isWinner && currentCode) {
+                var cs = document.getElementById('rl-code-section');
+                if (cs) {
+                    // Piccolo delay per lasciar finire l'animazione della ruota/slot
+                    setTimeout(function() { cs.style.display = 'block'; }, 600);
+                }
+            }
         };
 
         // --- GRATTA E VINCI ---
@@ -390,6 +399,20 @@ function ristoloyalty_game_shortcode() {
                             var alertEl = document.getElementById('rl-alert');
                             alertEl.textContent = data.message;
                             alertEl.style.display = 'block';
+
+                            // ── CASO: premio precedente in attesa di riscatto ──
+                            if (data.has_pending_prize) {
+                                document.getElementById('rl-lead-form-container').style.display = 'none';
+                                currentCode = data.codice_univoco;
+                                document.getElementById('rl-code-value').textContent = data.codice_univoco;
+                                redemptionMsg.textContent = '';
+                                pinInput.value = '';
+                                pinInput.disabled = false;
+                                redeemBtn.disabled = false;
+                                codeSection.style.display = 'block';
+                                return;
+                            }
+
                             document.getElementById('rl-pts').textContent = data.points;
                             document.getElementById('rl-user-points').style.display = 'block';
 
@@ -402,13 +425,13 @@ function ristoloyalty_game_shortcode() {
                             gameHandler = new RistoGame('rl-game-container', gameType);
                             gameHandler.init(data.is_winner, data.prize);
 
-                            // Mostra codice riscatto se vincita
+                            // Salva il codice — il box viene mostrato in onReveal() dopo l'animazione
                             if (data.is_winner && data.codice_univoco) {
                                 currentCode = data.codice_univoco;
                                 document.getElementById('rl-code-value').textContent = data.codice_univoco;
-                                codeSection.style.display = 'block';
                                 redemptionMsg.textContent = '';
                                 pinInput.value = '';
+                                pinInput.disabled = false;
                                 redeemBtn.disabled = false;
                             } else {
                                 codeSection.style.display = 'none';
@@ -508,11 +531,29 @@ function ristoloyalty_play_handler() {
     $user = $wpdb->get_row( $wpdb->prepare("SELECT * FROM $table_name WHERE email = %s", $email) );
     $premi_vinti_arr = array();
 
+    // ── BLOCCO: controlla se esiste già un premio 'pending' per questo utente ──
+    $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+    $pending = $wpdb->get_row( $wpdb->prepare(
+        "SELECT * FROM $redemptions_table WHERE email = %s AND stato = 'pending' ORDER BY data_vincita DESC LIMIT 1",
+        $email
+    ) );
+    if ( $pending ) {
+        wp_send_json_success( array(
+            'has_pending_prize' => true,
+            'message'           => "Ciao $name! Hai ancora un premio da riscattare 🎁",
+            'codice_univoco'    => $pending->codice_univoco,
+            'prize'             => $pending->premio,
+            'points'            => $user ? $user->punti : 0,
+        ) );
+        return;
+    }
+
     // Lettura opzioni limite giocate
     $max_plays = intval( get_option('loyalty_max_plays', 1) );
     $play_period = intval( get_option('loyalty_play_period', 24) );
     $period_unit = get_option('loyalty_play_period_unit', 'hours');
     $period_hours = ($period_unit === 'days') ? $play_period * 24 : $play_period;
+
 
     if ( $user ) {
         if ($user->premi_vinti) {
@@ -720,4 +761,121 @@ function ristoloyalty_redeem_handler() {
         'premio'  => $redemption->premio,
     ) );
 }
+
+// =========================================================
+// SHORTCODE: [loyalty_my_rewards] — I Miei Premi in Attesa
+// =========================================================
+add_shortcode('loyalty_my_rewards', 'ristoloyalty_my_rewards_shortcode');
+function ristoloyalty_my_rewards_shortcode() {
+    $ajaxurl = admin_url('admin-ajax.php');
+    $nonce   = wp_create_nonce('ristoloyalty_nonce');
+
+    $c_bg     = get_option('loyalty_color_bg',     '#080808');
+    $c_accent = get_option('loyalty_color_accent', '#FFD700');
+    $c_text   = get_option('loyalty_color_text',   '#ffffff');
+    $c_card   = get_option('loyalty_color_card',   '#1a1a1a');
+    $c_btnTxt = get_option('loyalty_color_button_text', '#000000');
+
+    ob_start();
+    ?>
+    <style>
+    .rl-myrewards{max-width:480px;margin:0 auto;font-family:'Outfit',sans-serif;background:<?php echo esc_attr($c_bg); ?>;border-radius:20px;padding:2rem;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid rgba(255,215,0,.15);color:<?php echo esc_attr($c_text); ?>;}
+    .rl-myrewards h2{color:<?php echo esc_attr($c_accent); ?>;text-align:center;font-size:1.8rem;font-weight:900;margin:0 0 1.2rem;}
+    .rl-myrewards-form{display:flex;flex-direction:column;gap:.8rem;}
+    .rl-myrewards-form input{background:<?php echo esc_attr($c_card); ?>;border:1px solid #444;color:<?php echo esc_attr($c_text); ?>;padding:.9rem 1rem;border-radius:10px;font-size:1rem;outline:none;font-family:inherit;}
+    .rl-myrewards-form input:focus{border-color:<?php echo esc_attr($c_accent); ?>;}
+    .rl-myrewards-btn{background:<?php echo esc_attr($c_accent); ?>;color:<?php echo esc_attr($c_btnTxt); ?>;border:none;padding:.9rem 2rem;font-weight:700;border-radius:10px;cursor:pointer;font-family:inherit;font-size:1rem;}
+    .rl-myrewards-btn:disabled{opacity:.6;cursor:not-allowed;}
+    .rl-reward-card{background:<?php echo esc_attr($c_card); ?>;border:2px dashed <?php echo esc_attr($c_accent); ?>;border-radius:14px;padding:1rem 1.2rem;margin-top:.8rem;text-align:center;}
+    .rl-reward-name{font-size:1.05rem;font-weight:600;margin-bottom:.5rem;}
+    .rl-reward-code{font-size:1.8rem;font-weight:900;letter-spacing:.3em;color:<?php echo esc_attr($c_accent); ?>;display:block;margin:.4rem 0;}
+    .rl-reward-date{font-size:.8rem;opacity:.55;}
+    #rl-mr-result{margin-top:1rem;}
+    .rl-mr-empty{text-align:center;opacity:.55;padding:1rem 0;}
+    </style>
+    <div class="rl-myrewards">
+        <h2>🎁 I Miei Premi</h2>
+        <div class="rl-myrewards-form">
+            <input type="email" id="rl-mr-email" placeholder="La tua Email" />
+            <button class="rl-myrewards-btn" id="rl-mr-btn">🔍 Cerca i Miei Premi</button>
+        </div>
+        <div id="rl-mr-result"></div>
+    </div>
+    <script>
+    (function(){
+        var AJAX_URL = '<?php echo esc_js($ajaxurl); ?>';
+        var NONCE    = '<?php echo esc_js($nonce); ?>';
+        document.getElementById('rl-mr-btn').addEventListener('click', function() {
+            var email = document.getElementById('rl-mr-email').value.trim();
+            if (!email) return;
+            var btn = this; btn.disabled = true; btn.textContent = 'Caricamento...';
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', AJAX_URL);
+            xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                btn.disabled = false; btn.textContent = '🔍 Cerca i Miei Premi';
+                var result = document.getElementById('rl-mr-result');
+                var resp = JSON.parse(xhr.responseText);
+                if (resp.success) {
+                    var items = resp.data.rewards;
+                    if (!items || items.length === 0) {
+                        result.innerHTML = '<p class="rl-mr-empty">Nessun premio in attesa di riscatto.</p>';
+                        return;
+                    }
+                    var html = '';
+                    items.forEach(function(r) {
+                        html += '<div class="rl-reward-card">' +
+                                '<div class="rl-reward-name">🏆 ' + r.premio + '</div>' +
+                                '<span class="rl-reward-code">' + r.codice_univoco + '</span>' +
+                                '<div class="rl-reward-date">Vinto il ' + r.data_vincita + '</div>' +
+                                '</div>';
+                    });
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<p class="rl-mr-empty">❌ ' + (resp.data ? resp.data.message : 'Errore.') + '</p>';
+                }
+            };
+            xhr.onerror = function() { btn.disabled = false; btn.textContent = '🔍 Cerca i Miei Premi'; };
+            xhr.send('action=ristoloyalty_get_my_rewards&nonce=' + encodeURIComponent(NONCE) +
+                     '&email=' + encodeURIComponent(email));
+        });
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
+// AJAX: Recupera premi pending per email
+add_action('wp_ajax_ristoloyalty_get_my_rewards', 'ristoloyalty_get_my_rewards_handler');
+add_action('wp_ajax_nopriv_ristoloyalty_get_my_rewards', 'ristoloyalty_get_my_rewards_handler');
+
+function ristoloyalty_get_my_rewards_handler() {
+    check_ajax_referer('ristoloyalty_nonce', 'nonce');
+
+    global $wpdb;
+    $email = sanitize_email( $_POST['email'] ?? '' );
+
+    if ( ! $email ) {
+        wp_send_json_error( array('message' => 'Email mancante.') );
+        return;
+    }
+
+    $table = $wpdb->prefix . 'loyalty_redemptions';
+    $rows  = $wpdb->get_results( $wpdb->prepare(
+        "SELECT codice_univoco, premio, data_vincita FROM $table WHERE email = %s AND stato = 'pending' ORDER BY data_vincita DESC",
+        $email
+    ) );
+
+    $rewards = array();
+    foreach ( $rows as $r ) {
+        $rewards[] = array(
+            'codice_univoco' => $r->codice_univoco,
+            'premio'         => $r->premio,
+            'data_vincita'   => date_i18n('d/m/Y H:i', strtotime($r->data_vincita)),
+        );
+    }
+
+    wp_send_json_success( array('rewards' => $rewards) );
+}
+
 
