@@ -15,59 +15,151 @@ function ristoloyalty_generate_unique_code() {
 }
 
 // =========================================================
-// LEADERBOARD: Top 10 per punti
+// LEADERBOARD: Top 10 per punti correnti
 // =========================================================
 function ristoloyalty_get_leaderboard( $limit = 10 ) {
     global $wpdb;
     $table = $wpdb->prefix . 'loyalty_customers';
     return $wpdb->get_results(
-        $wpdb->prepare("SELECT nome, punti FROM $table ORDER BY punti DESC LIMIT %d", $limit)
+        $wpdb->prepare(
+            "SELECT nome, email, punti, punti_totali FROM $table ORDER BY punti DESC LIMIT %d",
+            $limit
+        )
     );
 }
 
-// Shortcode Leaderboard
+// Helper: oscura l'email per la privacy (es. ma***@gmail.com)
+function ristoloyalty_obscure_email( $email ) {
+    $parts = explode('@', $email);
+    if ( count($parts) !== 2 ) return '***';
+    $name   = $parts[0];
+    $domain = $parts[1];
+    $keep   = max(2, (int) floor( strlen($name) / 3 ));
+    return substr($name, 0, $keep) . str_repeat('*', max(3, strlen($name) - $keep)) . '@' . $domain;
+}
+
+// Shortcode Leaderboard — versione avanzata
 add_shortcode('loyalty_leaderboard', 'ristoloyalty_leaderboard_shortcode');
 function ristoloyalty_leaderboard_shortcode() {
     $leaders = ristoloyalty_get_leaderboard(10);
 
-    $c_bg     = get_option('loyalty_color_bg',     '#080808');
-    $c_accent = get_option('loyalty_color_accent', '#FFD700');
-    $c_text   = get_option('loyalty_color_text',   '#ffffff');
-    $c_card   = get_option('loyalty_color_card',   '#1a1a1a');
+    $c_bg     = get_option('loyalty_color_bg',          '#080808');
+    $c_accent = get_option('loyalty_color_accent',      '#FFD700');
+    $c_text   = get_option('loyalty_color_text',        '#ffffff');
+    $c_card   = get_option('loyalty_color_card',        '#1a1a1a');
+    $c_btnTxt = get_option('loyalty_color_button_text', '#000000');
+
+    // Data ultimo reset (se impostata)
+    $last_reset = get_option('loyalty_leaderboard_last_reset', '');
 
     ob_start();
     ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-    .rl-leaderboard{max-width:480px;margin:0 auto;font-family:'Outfit',sans-serif;background:<?php echo esc_attr($c_bg); ?>;border-radius:20px;padding:2rem;box-shadow:0 10px 40px rgba(0,0,0,.5);border:1px solid rgba(255,215,0,.15);}
-    .rl-leaderboard h2{color:<?php echo esc_attr($c_accent); ?>;text-align:center;font-size:1.8rem;font-weight:900;margin:0 0 1.5rem;}
-    .rl-lb-row{display:flex;align-items:center;gap:.8rem;background:<?php echo esc_attr($c_card); ?>;border-radius:12px;padding:.8rem 1rem;margin-bottom:.6rem;}
-    .rl-lb-rank{font-size:1.4rem;font-weight:900;min-width:2rem;text-align:center;color:<?php echo esc_attr($c_accent); ?>;}
-    .rl-lb-rank.gold{color:#FFD700;} .rl-lb-rank.silver{color:#C0C0C0;} .rl-lb-rank.bronze{color:#CD7F32;}
-    .rl-lb-name{flex:1;color:<?php echo esc_attr($c_text); ?>;font-weight:600;font-size:1rem;}
-    .rl-lb-pts{background:<?php echo esc_attr($c_accent); ?>;color:#000;font-weight:900;padding:4px 12px;border-radius:20px;font-size:.95rem;}
-    .rl-lb-empty{text-align:center;color:<?php echo esc_attr($c_text); ?>;opacity:.5;padding:2rem 0;}
+    .rl-lb-wrap{max-width:500px;margin:0 auto;font-family:'Outfit',sans-serif;color:<?php echo esc_attr($c_text); ?>;}
+    .rl-lb-header{background:<?php echo esc_attr($c_bg); ?>;border-radius:20px 20px 0 0;padding:1.8rem 1.5rem 1rem;text-align:center;border:1px solid rgba(255,215,0,.15);border-bottom:none;}
+    .rl-lb-header h2{margin:0 0 .3rem;font-size:1.9rem;font-weight:900;color:<?php echo esc_attr($c_accent); ?>;}
+    .rl-lb-header p{margin:0;font-size:.85rem;opacity:.5;}
+    .rl-lb-body{background:<?php echo esc_attr($c_bg); ?>;border-radius:0 0 20px 20px;padding:.5rem 1rem 1.5rem;border:1px solid rgba(255,215,0,.15);border-top:none;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+    /* Podio Top 3 */
+    .rl-podio{display:flex;justify-content:center;align-items:flex-end;gap:.8rem;margin:.5rem 0 1.2rem;padding:.8rem 0;}
+    .rl-podio-item{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex:1;max-width:130px;}
+    .rl-podio-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;border:3px solid;}
+    .rl-podio-avatar.gold{border-color:#FFD700;background:rgba(255,215,0,.15);box-shadow:0 0 16px rgba(255,215,0,.4);}
+    .rl-podio-avatar.silver{border-color:#C0C0C0;background:rgba(192,192,192,.12);}
+    .rl-podio-avatar.bronze{border-color:#CD7F32;background:rgba(205,127,50,.12);}
+    .rl-podio-name{font-size:.78rem;font-weight:700;text-align:center;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .rl-podio-pts{font-size:.78rem;font-weight:900;padding:2px 8px;border-radius:20px;background:<?php echo esc_attr($c_accent); ?>;color:<?php echo esc_attr($c_btnTxt); ?>;}
+    .rl-podio-medal{font-size:1.4rem;line-height:1;}
+    .rl-podio-item.first .rl-podio-avatar{width:62px;height:62px;font-size:1.9rem;}
+    /* Lista 4-10 */
+    .rl-lb-list{display:flex;flex-direction:column;gap:.45rem;}
+    .rl-lb-row{display:grid;grid-template-columns:2.2rem 1fr auto;align-items:center;gap:.7rem;background:<?php echo esc_attr($c_card); ?>;border-radius:12px;padding:.65rem 1rem;transition:transform .15s;}
+    .rl-lb-row:hover{transform:translateX(3px);}
+    .rl-lb-pos{font-size:.95rem;font-weight:900;text-align:center;color:<?php echo esc_attr($c_accent); ?>;opacity:.7;}
+    .rl-lb-name{font-size:.95rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .rl-lb-pts{font-size:.85rem;font-weight:900;padding:3px 10px;border-radius:20px;background:<?php echo esc_attr($c_accent); ?>;color:<?php echo esc_attr($c_btnTxt); ?>;white-space:nowrap;}
+    .rl-lb-empty{text-align:center;opacity:.45;padding:2.5rem 0;font-size:.95rem;}
+    .rl-lb-divider{border:none;border-top:1px solid rgba(255,255,255,.07);margin:.6rem 0;}
+    /* Responsive */
+    @media(max-width:400px){
+        .rl-podio-avatar{width:44px;height:44px;font-size:1.3rem;}
+        .rl-podio-item.first .rl-podio-avatar{width:54px;height:54px;font-size:1.6rem;}
+    }
     </style>
-    <div class="rl-leaderboard">
-        <h2>🏆 Classifica Punti</h2>
-        <?php if ( empty($leaders) ) : ?>
-            <p class="rl-lb-empty">Nessun giocatore ancora.</p>
-        <?php else : ?>
-            <?php foreach ( $leaders as $i => $row ) :
-                $rank = $i + 1;
-                $rankClass = $rank === 1 ? 'gold' : ($rank === 2 ? 'silver' : ($rank === 3 ? 'bronze' : ''));
-                $medal = $rank === 1 ? '🥇' : ($rank === 2 ? '🥈' : ($rank === 3 ? '🥉' : $rank));
+
+    <div class="rl-lb-wrap">
+        <div class="rl-lb-header">
+            <h2>🏆 Classifica</h2>
+            <?php if ($last_reset): ?>
+            <p>Reset mensile: <?php echo esc_html(date_i18n('d/m/Y', strtotime($last_reset))); ?></p>
+            <?php else: ?>
+            <p>Punti accumulati nel periodo corrente</p>
+            <?php endif; ?>
+        </div>
+        <div class="rl-lb-body">
+        <?php if ( empty($leaders) ): ?>
+            <p class="rl-lb-empty">🎲 Nessun giocatore ancora in classifica.</p>
+        <?php else: ?>
+            <?php
+            // Estrai top 3 e resto
+            $top3 = array_slice($leaders, 0, 3);
+            $rest  = array_slice($leaders, 3);
+
+            // Funzione nickname locale
+            $get_nick = function($row) {
+                $nick = trim($row->nome);
+                if ( ! $nick || strlen($nick) < 2 ) {
+                    $nick = ristoloyalty_obscure_email($row->email);
+                }
+                return $nick;
+            };
+
+            // Ordine visivo podio: 2nd | 1st | 3rd
+            $podio_order = [];
+            if ( isset($top3[1]) ) $podio_order[] = ['data' => $top3[1], 'rank' => 2, 'cls' => 'silver', 'medal' => '🥈'];
+            if ( isset($top3[0]) ) $podio_order[] = ['data' => $top3[0], 'rank' => 1, 'cls' => 'gold',   'medal' => '🥇'];
+            if ( isset($top3[2]) ) $podio_order[] = ['data' => $top3[2], 'rank' => 3, 'cls' => 'bronze', 'medal' => '🥉'];
             ?>
-            <div class="rl-lb-row">
-                <div class="rl-lb-rank <?php echo esc_attr($rankClass); ?>"><?php echo $medal; ?></div>
-                <div class="rl-lb-name"><?php echo esc_html($row->nome); ?></div>
-                <div class="rl-lb-pts"><?php echo esc_html($row->punti); ?> pt</div>
+
+            <!-- PODIO TOP 3 -->
+            <?php if ( ! empty($podio_order) ): ?>
+            <div class="rl-podio">
+                <?php foreach ( $podio_order as $p ): ?>
+                <div class="rl-podio-item <?php echo $p['rank'] === 1 ? 'first' : ''; ?>">
+                    <div class="rl-podio-medal"><?php echo $p['medal']; ?></div>
+                    <div class="rl-podio-avatar <?php echo esc_attr($p['cls']); ?>">
+                        <?php echo mb_strtoupper(mb_substr($get_nick($p['data']), 0, 1)); ?>
+                    </div>
+                    <div class="rl-podio-name"><?php echo esc_html($get_nick($p['data'])); ?></div>
+                    <div class="rl-podio-pts"><?php echo esc_html($p['data']->punti); ?> pt</div>
+                </div>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- LISTA 4-10 -->
+            <?php if ( ! empty($rest) ): ?>
+            <hr class="rl-lb-divider">
+            <div class="rl-lb-list">
+                <?php foreach ( $rest as $i => $row ): ?>
+                <div class="rl-lb-row">
+                    <div class="rl-lb-pos"><?php echo $i + 4; ?></div>
+                    <div class="rl-lb-name"><?php echo esc_html($get_nick($row)); ?></div>
+                    <div class="rl-lb-pts"><?php echo esc_html($row->punti); ?> pt</div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
         <?php endif; ?>
+        </div>
     </div>
     <?php
     return ob_get_clean();
 }
+
 
 // Shortcode per il Gioco
 add_shortcode('loyalty_game', 'ristoloyalty_game_shortcode');
@@ -597,10 +689,11 @@ function ristoloyalty_play_handler() {
         $points = $user->punti + $points_per_play;
         $wpdb->update( $table_name,
             array(
-                'punti' => $points, 
-                'nome' => $name, 
+                'punti'        => $points,
+                'punti_totali' => $user->punti_totali + $points_per_play,
+                'nome'         => $name,
                 'ultimo_gioco' => current_time('mysql'),
-                'play_count' => $new_play_count,
+                'play_count'   => $new_play_count,
                 'period_start' => $new_period_start
             ),
             array('id' => $user->id)
@@ -610,11 +703,12 @@ function ristoloyalty_play_handler() {
         $points = $points_per_play;
         $wpdb->insert( $table_name,
             array(
-                'nome' => $name, 
-                'email' => $email, 
-                'punti' => $points, 
+                'nome'         => $name,
+                'email'        => $email,
+                'punti'        => $points,
+                'punti_totali' => $points,
                 'ultimo_gioco' => current_time('mysql'),
-                'play_count' => $new_play_count,
+                'play_count'   => $new_play_count,
                 'period_start' => $new_period_start
             )
         );
@@ -644,6 +738,7 @@ function ristoloyalty_play_handler() {
             $is_winner = true;
             $won_prize = '🏆 ' . $m['prize'];
             $new_pts   = $points - $m['points'];
+            // Aggiorna punti periodo; punti_totali non viene detratto (storico)
             $wpdb->update( $table_name, array( 'punti' => $new_pts ), array( 'email' => $email ) );
             $points  = $new_pts;
             $win_msg = ' — TRAGUARDO ' . $m['points'] . ' PUNTI!';

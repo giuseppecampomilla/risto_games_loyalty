@@ -36,6 +36,7 @@ function ristorante_loyalty_create_table() {
         nome varchar(100) NOT NULL,
         email varchar(100) NOT NULL,
         punti mediumint(9) DEFAULT 0 NOT NULL,
+        punti_totali mediumint(9) DEFAULT 0 NOT NULL,
         ultimo_gioco datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
         PRIMARY KEY  (id),
         UNIQUE KEY email (email)
@@ -103,6 +104,19 @@ function ristorante_loyalty_upgrade_db() {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
         update_option('loyalty_db_version', '2.2');
+        $current_version = '2.2';
+    }
+
+    // Upgrade a 2.3: aggiunge colonna punti_totali per storico classifica
+    if ( version_compare($current_version, '2.3', '<') ) {
+        $table = $wpdb->prefix . 'loyalty_customers';
+        $cols  = $wpdb->get_col("SHOW COLUMNS FROM $table");
+        if ( ! in_array('punti_totali', $cols) ) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN punti_totali MEDIUMINT(9) DEFAULT 0 NOT NULL AFTER punti");
+            // Inizializza punti_totali uguale a punti per i clienti esistenti
+            $wpdb->query("UPDATE $table SET punti_totali = punti WHERE punti_totali = 0");
+        }
+        update_option('loyalty_db_version', '2.3');
     }
 }
 
@@ -134,6 +148,11 @@ function ristorante_loyalty_add_menu_pages() {
     add_submenu_page(
         'loyalty-games-main', 'PIN Cameriere & Riscatti', '🔑 Riscatti',
         'manage_options', 'loyalty-games-redemptions', 'ristorante_loyalty_redemptions_page'
+    );
+    // Quinto sottomenu: Classifica
+    add_submenu_page(
+        'loyalty-games-main', 'Classifica', '🏆 Classifica',
+        'manage_options', 'loyalty-games-leaderboard', 'ristorante_loyalty_leaderboard_admin_page'
     );
 }
 
@@ -589,4 +608,86 @@ function ristorante_loyalty_enqueue_scripts() {
         'nonce'   => wp_create_nonce( 'ristoloyalty_nonce' ),
         'prizes'  => $prizes
     ) );
+}
+
+// =========================================================
+// ADMIN PAGE: 🏆 Classifica con Reset Mensile
+// =========================================================
+function ristorante_loyalty_leaderboard_admin_page() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'loyalty_customers';
+
+    // Gestione Reset
+    $reset_msg = '';
+    if ( isset($_POST['lb_reset_nonce']) && wp_verify_nonce($_POST['lb_reset_nonce'], 'lb_reset_action') ) {
+        if ( current_user_can('manage_options') ) {
+            $wpdb->query("UPDATE $table SET punti = 0");
+            update_option('loyalty_leaderboard_last_reset', current_time('mysql'));
+            $reset_msg = '<div class="notice notice-success is-dismissible"><p>✅ Classifica azzerata! I punti totali storici sono stati preservati.</p></div>';
+        }
+    }
+
+    $leaders     = $wpdb->get_results("SELECT nome, email, punti, punti_totali FROM $table ORDER BY punti DESC LIMIT 10");
+    $last_reset  = get_option('loyalty_leaderboard_last_reset', '');
+    $total_users = $wpdb->get_var("SELECT COUNT(*) FROM $table");
+    ?>
+    <div class="wrap">
+        <h1>🏆 Classifica Loyalty</h1>
+        <?php echo $reset_msg; ?>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:2rem;margin-top:1.5rem;">
+            <!-- Tabella -->
+            <div>
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">#</th>
+                            <th>Nickname</th>
+                            <th>Email</th>
+                            <th>Punti Periodo</th>
+                            <th>Punti Totali Storici</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ( ! empty($leaders) ): ?>
+                        <?php foreach ($leaders as $i => $r):
+                            $rank  = $i + 1;
+                            $medal = $rank === 1 ? '🥇' : ($rank === 2 ? '🥈' : ($rank === 3 ? '🥉' : $rank));
+                            $nick  = trim($r->nome) ?: substr($r->email, 0, strpos($r->email, '@')) . '***';
+                        ?>
+                        <tr>
+                            <td><?php echo $medal; ?></td>
+                            <td><strong><?php echo esc_html($nick); ?></strong></td>
+                            <td><?php echo esc_html($r->email); ?></td>
+                            <td><span style="background:#FFD700;color:#000;padding:2px 10px;border-radius:20px;font-weight:900;"><?php echo esc_html($r->punti); ?> pt</span></td>
+                            <td style="color:#aaa;"><?php echo esc_html($r->punti_totali); ?> pt</td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="5" style="text-align:center;color:#999;">Nessun cliente ancora.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+                <p style="margin-top:.5rem;color:#666;">Totale clienti registrati: <strong><?php echo esc_html($total_users); ?></strong></p>
+            </div>
+
+            <!-- Box Reset -->
+            <div>
+                <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:1.5rem;">
+                    <h3 style="margin-top:0;">🔄 Reset Mensile</h3>
+                    <p style="color:#555;font-size:.9rem;">Azzera i <strong>punti del periodo</strong> di tutti i clienti. I <strong>punti totali storici</strong> rimangono intatti.</p>
+                    <?php if ($last_reset): ?>
+                    <p style="font-size:.85rem;color:#888;">Ultimo reset: <strong><?php echo date_i18n('d/m/Y H:i', strtotime($last_reset)); ?></strong></p>
+                    <?php endif; ?>
+                    <form method="post" onsubmit="return confirm('Sei sicuro? Questa operazione azzera i punti di TUTTI i clienti.');">
+                        <?php wp_nonce_field('lb_reset_action', 'lb_reset_nonce'); ?>
+                        <button type="submit" class="button button-primary" style="background:#d63638;border-color:#d63638;width:100%;">
+                            🗑️ Azzera Classifica
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
 }
