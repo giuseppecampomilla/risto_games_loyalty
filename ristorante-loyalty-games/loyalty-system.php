@@ -41,14 +41,14 @@ function ristoloyalty_game_shortcode() {
     .rl-gold-button:disabled{opacity:.6;cursor:not-allowed;transform:none;}
     .rl-points-badge{background:var(--rl-accent);color:var(--rl-btn-txt);padding:5px 15px;border-radius:20px;font-weight:700;display:inline-block;margin-bottom:10px;}
     .rl-alert{padding:10px;background:var(--rl-card);border-radius:10px;margin-bottom:10px;color:var(--rl-accent);font-weight:700;}
-    #rl-game-container{margin-top:1.5rem;position:relative;min-height:180px;}
+    #rl-game-container{margin-top:1.5rem;position:relative;min-height:180px;padding-bottom:1rem;}
     .rl-logo-img{max-height:70px;max-width:200px;object-fit:contain;margin-bottom:.8rem;display:block;margin-left:auto;margin-right:auto;}
     /* Scratch Card */
     .rl-scratch-wrap{position:relative;width:300px;height:150px;margin:auto;border-radius:15px;overflow:hidden;background:var(--rl-card);box-shadow:0 0 20px rgba(0,0,0,.5);}
     .rl-prize-text{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;color:var(--rl-accent);text-align:center;padding:.5rem;box-sizing:border-box;z-index:1;background:radial-gradient(circle,#2a2a2a 0%,#111 100%);}
     #rl-scratch-canvas{position:absolute;top:0;left:0;z-index:2;cursor:crosshair;border-radius:15px;transition:opacity .8s ease-out;}
     /* Wheel */
-    .rl-wheel-wrapper{position:relative;width:230px;height:230px;margin:auto;}
+    .rl-wheel-wrapper{position:relative;width:290px;height:290px;margin:auto;overflow:visible;}
     .rl-wheel-pointer{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:22px solid #fff;z-index:3;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));}
     #rl-wheel-canvas{border-radius:50%;border:5px solid var(--rl-accent);box-shadow:0 0 20px rgba(255,215,0,.4);transition:transform 4s cubic-bezier(.17,.67,.12,.99);}
     #rl-spin-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;width:70px;height:70px;padding:0;z-index:4;font-size:.8rem;font-weight:900;}
@@ -114,6 +114,10 @@ function ristoloyalty_game_shortcode() {
         RistoGame.prototype.onReveal = function() {
             if (this.isRevealed) return;
             this.isRevealed = true;
+
+            // Mostra il testo premio (per ruota e slot)
+            var lbl = document.getElementById('rl-prize-label');
+            if (lbl) lbl.style.display = 'block';
 
             document.getElementById('rl-play-again-btn').style.display = 'inline-block';
 
@@ -196,6 +200,13 @@ function ristoloyalty_game_shortcode() {
             wheelTarget.id = 'rl-wheel-target';
             this.container.appendChild(wheelTarget);
 
+            // Div premio (nascosto, rivelato dopo lo spin)
+            var prizeDiv = document.createElement('div');
+            prizeDiv.id = 'rl-prize-label';
+            prizeDiv.style.cssText = 'display:none;font-size:1.4rem;font-weight:900;color:#FFD700;margin-top:1.2rem;text-align:center;padding:0.5rem 0 0.5rem;';
+            prizeDiv.textContent = this.prize || '';
+            this.container.appendChild(prizeDiv);
+
             if (typeof RistoWheelGame !== 'undefined') {
                 var wGame = new RistoWheelGame('rl-wheel-target', RistoLoyalty.prizes);
                 wGame.init();
@@ -203,8 +214,6 @@ function ristoloyalty_game_shortcode() {
                     if (self.isRevealed) return;
                     wGame.spinTo(self.prize || '', function() {
                         self.onReveal();
-                        // Mostra l'alert verde da AJAX (che era nascosto sotto al div point)
-                        // Ma onReveal lancia già i confetti
                     });
                 });
             } else {
@@ -488,9 +497,9 @@ function ristoloyalty_play_handler() {
     }
 
     wp_send_json_success( array(
-        'message' => $msg . $win_msg,
-        'points'  => $points,
-        'winner'  => $is_winner,
-        'prize'   => $won_prize
+        'message'   => $msg,
+        'points'    => $points,
+        'is_winner' => $is_winner,
+        'prize'     => $won_prize
     ) );
 }
