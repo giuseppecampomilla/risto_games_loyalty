@@ -1015,31 +1015,37 @@ function ristoloyalty_get_my_rewards_handler() {
 add_action( 'rest_api_init', 'ristoloyalty_register_rest_routes' );
 
 function ristoloyalty_register_rest_routes() {
-    register_rest_route( 'ristoloyalty/v1', '/user-data/', array(
-        'methods'  => WP_REST_Server::READABLE,
+    register_rest_route( 'loyalty/v1', '/user-data/', array(
+        'methods'  => 'GET',
         'callback' => 'ristoloyalty_rest_get_user_data',
-        'permission_callback' => '__return_true', // CORS preflight needs this, validation inside
+        'permission_callback' => '__return_true',
     ));
 
-    register_rest_route( 'ristoloyalty/v1', '/add-points/', array(
-        'methods'  => WP_REST_Server::CREATABLE,
+    register_rest_route( 'loyalty/v1', '/add-points/', array(
+        'methods'  => 'POST',
         'callback' => 'ristoloyalty_rest_add_points',
         'permission_callback' => '__return_true',
     ));
 }
 
-// Enable CORS for Netlify
+// Global CORS preflight handler
+add_action('init', function() {
+    if ( isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        header( 'Access-Control-Allow-Origin: *' );
+        header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS' );
+        header( 'Access-Control-Allow-Headers: X-Requested-With, Content-Type, Authorization, x-risto-secret' );
+        header( 'HTTP/1.1 200 OK' );
+        exit();
+    }
+});
+
+// Enable CORS for actual REST requests
 add_action( 'rest_api_init', function() {
     remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
     add_filter( 'rest_pre_serve_request', function( $value ) {
         header( 'Access-Control-Allow-Origin: *' );
         header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS' );
-        header( 'Access-Control-Allow-Credentials: true' );
-        header( 'Access-Control-Expose-Headers: Link', false );
-        header( 'Access-Control-Allow-Headers: X-Requested-With, Content-Type, Authorization, X-Risto-Secret' );
-        if ( 'OPTIONS' === $_SERVER['REQUEST_METHOD'] ) {
-            exit;
-        }
+        header( 'Access-Control-Allow-Headers: X-Requested-With, Content-Type, Authorization, x-risto-secret' );
         return $value;
     });
 }, 15 );
