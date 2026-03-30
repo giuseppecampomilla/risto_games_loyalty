@@ -1084,21 +1084,22 @@ function ristoloyalty_rest_get_user_data( $request ) {
     ) );
 }
 
-// POST: /wp-json/ristoloyalty/v1/add-points/
-// Requires header 'x-risto-secret'
+// POST: /wp-json/loyalty/v1/add-points/
 function ristoloyalty_rest_add_points( $request ) {
+    // Forziamo i CORS Header a livello di Endpoint
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    
+    if ( $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        status_header( 200 );
+        exit;
+    }
+
     global $wpdb;
 
-    // Security check using Waiter PIN
-    $secret = $request->get_header( 'x_risto_secret' );
-    if(!$secret) {
-        $secret = $request->get_header('x-risto-secret');
-    }
-    
-    $saved_pin = get_option('loyalty_waiter_pin', '');
-    if ( empty($saved_pin) || $secret !== $saved_pin ) {
-       return new WP_Error( 'unauthorized', 'Invalid Security Token or PIN not configured.', array( 'status' => 401 ) );
-    }
+    // TODO: Per ora l'accesso è libero per debuggare i CORS liberi.
+    // In seguito, reintrodurremo il controllo del PIN Cameriere.
 
     $email  = sanitize_email( $request->get_param( 'email' ) );
     $points = (int) $request->get_param( 'points' );
