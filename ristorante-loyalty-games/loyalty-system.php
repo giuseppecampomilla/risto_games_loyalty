@@ -919,10 +919,15 @@ function ristoloyalty_my_rewards_shortcode() {
                     }
                     var html = '';
                     items.forEach(function(r) {
-                        html += '<div class="rl-reward-card">' +
+                        html += '<div class="rl-reward-card" id="rl-card-'+r.codice_univoco+'">' +
                                 '<div class="rl-reward-name">🏆 ' + r.premio + '</div>' +
                                 '<span class="rl-reward-code">' + r.codice_univoco + '</span>' +
-                                '<div class="rl-reward-date">Vinto il ' + r.data_vincita + '</div>' +
+                                '<div class="rl-reward-date" style="margin-bottom:0.8rem;">Vinto il ' + r.data_vincita + '</div>' +
+                                '<div style="display:flex; gap:0.5rem; margin-top:0.5rem;">' +
+                                '<input type="password" id="rl-pin-'+r.codice_univoco+'" placeholder="PIN Cameriere" autocomplete="new-password" style="flex:1;text-align:center;padding:0.6rem;"/>' +
+                                '<button onclick="rlRedeemReward(\''+r.codice_univoco+'\')" class="rl-myrewards-btn" style="padding:0.6rem 1rem;">Riscatta</button>' +
+                                '</div>' +
+                                '<div id="rl-msg-'+r.codice_univoco+'" style="margin-top:0.5rem;font-weight:bold;font-size:0.9rem;"></div>' +
                                 '</div>';
                     });
                     result.innerHTML = html;
@@ -934,6 +939,38 @@ function ristoloyalty_my_rewards_shortcode() {
             xhr.send('action=ristoloyalty_get_my_rewards&nonce=' + encodeURIComponent(NONCE) +
                      '&email=' + encodeURIComponent(email));
         });
+
+        window.rlRedeemReward = function(codice) {
+            var pinInput = document.getElementById('rl-pin-' + codice);
+            var pin = pinInput.value.trim();
+            var msgBox = document.getElementById('rl-msg-' + codice);
+            
+            if (!pin) {
+                msgBox.style.color = '#ff6b6b';
+                msgBox.textContent = 'Inserisci il PIN cameriere.';
+                return;
+            }
+            msgBox.style.color = '<?php echo esc_js($c_text); ?>';
+            msgBox.textContent = 'Validazione in corso...';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', AJAX_URL);
+            xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                var resp = JSON.parse(xhr.responseText);
+                if (resp.success) {
+                    msgBox.style.color = '#4ade80';
+                    msgBox.textContent = '✅ Premio Consegnato con Successo!';
+                    document.getElementById('rl-card-' + codice).style.borderColor = '#4ade80';
+                    pinInput.parentElement.style.display = 'none'; // Hide input and button
+                } else {
+                    msgBox.style.color = '#ff6b6b';
+                    msgBox.textContent = '❌ ' + (resp.data ? resp.data.message : 'Errore.');
+                }
+            };
+            xhr.send('action=ristoloyalty_redeem&nonce=' + encodeURIComponent(NONCE) +
+                     '&codice=' + encodeURIComponent(codice) + '&pin=' + encodeURIComponent(pin));
+        };
     })();
     </script>
     <?php

@@ -210,7 +210,13 @@ function ristorante_loyalty_settings_page() {
         <h1>⚙️ Impostazioni Gioco</h1>
         
         <div class="notice notice-info is-dismissible" style="margin-bottom: 20px;">
-            <p><strong>💡 Shortcode del Gioco:</strong> Copia e incolla questo codice: <code>[loyalty_game]</code> nella pagina in cui vuoi far apparire il gioco.</p>
+            <p style="font-size: 1.1em; margin-bottom: 8px;"><strong>📌 Istruzioni e Shortcode Supportati</strong></p>
+            <p style="margin-top: 0;">Usa i seguenti shortcode all'interno di pagine o articoli WordPress per visualizzare le varie schermate del sistema Loyalty:</p>
+            <ul style="list-style-type: disc; margin-left: 20px; margin-bottom: 10px;">
+                <li><code>[loyalty_game]</code> &mdash; Mostra l'interfaccia di gioco principale (Ruota, Gratta e Vinci o Slot).</li>
+                <li><code>[loyalty_leaderboard]</code> &mdash; Mostra il tabellone con i primi 10 utenti classificati.</li>
+                <li><code>[loyalty_my_rewards]</code> &mdash; Mostra lo storico dei premi vinti ma non ancora riscattati, con la possibilità di convalidarli tramite PIN cameriere.</li>
+            </ul>
         </div>
 
         <form method="post" action="options.php">
