@@ -1010,4 +1010,118 @@ function ristoloyalty_get_my_rewards_handler() {
     wp_send_json_success( array('rewards' => $rewards) );
 }
 
+// --- REST API FOR REACT PWA ---
+
+add_action( 'rest_api_init', 'ristoloyalty_register_rest_routes' );
+
+function ristoloyalty_register_rest_routes() {
+    register_rest_route( 'ristoloyalty/v1', '/user-data/', array(
+        'methods'  => WP_REST_Server::READABLE,
+        'callback' => 'ristoloyalty_rest_get_user_data',
+        'permission_callback' => '__return_true', // CORS preflight needs this, validation inside
+    ));
+
+    register_rest_route( 'ristoloyalty/v1', '/add-points/', array(
+        'methods'  => WP_REST_Server::CREATABLE,
+        'callback' => 'ristoloyalty_rest_add_points',
+        'permission_callback' => '__return_true',
+    ));
+}
+
+// Enable CORS for Netlify
+add_action( 'rest_api_init', function() {
+    remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+    add_filter( 'rest_pre_serve_request', function( $value ) {
+        header( 'Access-Control-Allow-Origin: *' );
+        header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS' );
+        header( 'Access-Control-Allow-Credentials: true' );
+        header( 'Access-Control-Expose-Headers: Link', false );
+        header( 'Access-Control-Allow-Headers: X-Requested-With, Content-Type, Authorization, X-Risto-Secret' );
+        if ( 'OPTIONS' === $_SERVER['REQUEST_METHOD'] ) {
+            exit;
+        }
+        return $value;
+    });
+}, 15 );
+
+// GET: /wp-json/ristoloyalty/v1/user-data/?email=...
+function ristoloyalty_rest_get_user_data( $request ) {
+    global $wpdb;
+    $email = sanitize_email( $request->get_param( 'email' ) );
+
+    if ( empty( $email ) ) {
+        return new WP_Error( 'no_email', 'Email missing.', array( 'status' => 400 ) );
+    }
+
+    $table_name = $wpdb->prefix . 'loyalty_customers';
+    $user = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE email = %s", $email ) );
+
+    if ( ! $user ) {
+        return new WP_Error( 'not_found', 'User not found.', array( 'status' => 404 ) );
+    }
+
+    $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+    $pending_rewards = $wpdb->get_results( $wpdb->prepare(
+        "SELECT codice_univoco, premio, data_vincita FROM $redemptions_table WHERE email = %s AND stato = 'pending' ORDER BY data_vincita DESC",
+        $email
+    ));
+
+    return rest_ensure_response( array(
+        'success' => true,
+        'user'    => array(
+            'nome'         => $user->nome,
+            'email'        => $user->email,
+            'punti'        => (int) $user->punti,
+            'punti_totali' => (int) $user->punti_totali
+        ),
+        'rewards' => $pending_rewards
+    ) );
+}
+
+// POST: /wp-json/ristoloyalty/v1/add-points/
+// Requires header 'x-risto-secret'
+function ristoloyalty_rest_add_points( $request ) {
+    global $wpdb;
+
+    // Security check using Waiter PIN
+    $secret = $request->get_header( 'x_risto_secret' );
+    if(!$secret) {
+        $secret = $request->get_header('x-risto-secret');
+    }
+    
+    $saved_pin = get_option('loyalty_waiter_pin', '');
+    if ( empty($saved_pin) || $secret !== $saved_pin ) {
+       return new WP_Error( 'unauthorized', 'Invalid Security Token or PIN not configured.', array( 'status' => 401 ) );
+    }
+
+    $email  = sanitize_email( $request->get_param( 'email' ) );
+    $points = (int) $request->get_param( 'points' );
+
+    if ( empty( $email ) || $points <= 0 ) {
+        return new WP_Error( 'invalid_data', 'Invalid Email or points.', array( 'status' => 400 ) );
+    }
+
+    $table_name = $wpdb->prefix . 'loyalty_customers';
+    $user = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE email = %s", $email ) );
+
+    if ( ! $user ) {
+        return new WP_Error( 'not_found', 'User not found.', array( 'status' => 404 ) );
+    }
+
+    $new_punti  = (int) $user->punti + $points;
+    $new_totali = (int) $user->punti_totali + $points;
+
+    $wpdb->update(
+        $table_name,
+        array( 'punti' => $new_punti, 'punti_totali' => $new_totali ),
+        array( 'email' => $email )
+    );
+
+    return rest_ensure_response( array(
+        'success' => true,
+        'punti'   => $new_punti,
+        'message' => 'Points successfully added.'
+    ) );
+}
+
 
