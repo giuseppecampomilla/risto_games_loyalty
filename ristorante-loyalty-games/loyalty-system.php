@@ -1026,6 +1026,24 @@ function ristoloyalty_register_rest_routes() {
         'callback' => 'ristoloyalty_rest_add_points',
         'permission_callback' => '__return_true',
     ));
+
+    register_rest_route( 'loyalty/v1', '/process-win/', array(
+        'methods'  => 'POST',
+        'callback' => 'ristoloyalty_rest_process_win',
+        'permission_callback' => '__return_true',
+    ));
+
+    register_rest_route( 'loyalty/v1', '/redeem-reward/', array(
+        'methods'  => 'POST',
+        'callback' => 'ristoloyalty_rest_redeem_reward',
+        'permission_callback' => '__return_true',
+    ));
+
+    register_rest_route( 'loyalty/v1', '/my-rewards/', array(
+        'methods'  => 'GET',
+        'callback' => 'ristoloyalty_rest_my_rewards',
+        'permission_callback' => '__return_true',
+    ));
 }
 
 // Global CORS preflight handler
@@ -1131,4 +1149,209 @@ function ristoloyalty_rest_add_points( $request ) {
     ) );
 }
 
+// POST: /wp-json/loyalty/v1/process-win/
+function ristoloyalty_rest_process_win( $request ) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    
+    if ( $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        status_header( 200 );
+        exit;
+    }
 
+    global $wpdb;
+
+    $email  = sanitize_email( $request->get_param( 'email' ) );
+    $points = (int) $request->get_param( 'points' );
+    $premio = sanitize_text_field( $request->get_param( 'premio_fisico' ) );
+    $name   = sanitize_text_field( $request->get_param( 'name' ) ); // Opzionale per creazione
+
+    if ( empty( $email ) ) {
+        return new WP_Error( 'invalid_data', 'Email is required.', array( 'status' => 400 ) );
+    }
+
+    $table_name = $wpdb->prefix . 'loyalty_customers';
+    $user = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE email = %s", $email ) );
+
+    $new_punti = $points;
+    $new_totali = $points;
+
+    if ( $user ) {
+        $new_punti = (int) $user->punti + $points;
+        $new_totali = (int) $user->punti_totali + $points;
+
+        // Storico premi
+        $premi_vinti_arr = array();
+        if ( ! empty( $user->premi_vinti ) ) {
+            $parsed = json_decode( $user->premi_vinti, true );
+            if ( is_array( $parsed ) ) $premi_vinti_arr = $parsed;
+        }
+
+        if ( ! empty( $premio ) ) {
+            $premi_vinti_arr[] = array(
+                'premio' => $premio,
+                'data'   => current_time('mysql')
+            );
+        }
+
+        $wpdb->update(
+            $table_name,
+            array( 
+                'punti' => $new_punti, 
+                'punti_totali' => $new_totali, 
+                'premi_vinti' => wp_json_encode( $premi_vinti_arr ) 
+            ),
+            array( 'id' => $user->id )
+        );
+    } else {
+        // Create user
+        $p_start = current_time('mysql');
+        
+        $premi_vinti_arr = array();
+        if ( ! empty( $premio ) ) {
+            $premi_vinti_arr[] = array(
+                'premio' => $premio,
+                'data'   => current_time('mysql')
+            );
+        }
+
+        $wpdb->insert( $table_name, array(
+            'nome'         => $name ? $name : 'Utente Sconosciuto',
+            'email'        => $email,
+            'punti'        => $new_punti,
+            'punti_totali' => $new_totali,
+            'ultimo_gioco' => current_time('mysql'),
+            'play_count'   => 1,
+            'period_start' => $p_start,
+            'premi_vinti'  => wp_json_encode( $premi_vinti_arr )
+        ) );
+    }
+
+    // Aggiungi alla tabella redemptions se c'è un premio fisico
+    $codice_univoco = '';
+    if ( ! empty( $premio ) ) {
+        $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+        $codice_univoco = ristoloyalty_generate_unique_code();
+        $wpdb->insert( $redemptions_table, array(
+            'codice_univoco' => $codice_univoco,
+            'email'          => $email,
+            'premio'         => $premio,
+            'stato'          => 'pending',
+            'data_vincita'   => current_time('mysql'),
+        ) );
+    }
+
+    return rest_ensure_response( array(
+        'success'        => true,
+        'punti'          => $new_punti,
+        'codice_univoco' => $codice_univoco,
+        'message'        => 'Points and reward processed successfully.'
+    ) );
+}
+
+// POST: /wp-json/loyalty/v1/redeem-reward/
+function ristoloyalty_rest_redeem_reward( $request ) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    
+    if ( $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        status_header( 200 );
+        exit;
+    }
+
+    global $wpdb;
+
+    $email     = sanitize_email( $request->get_param( 'email' ) );
+    $reward_id = sanitize_text_field( $request->get_param( 'reward_id' ) );
+    $pin       = sanitize_text_field( $request->get_param( 'pin' ) );
+
+    if ( empty( $email ) || empty( $reward_id ) || empty( $pin ) ) {
+        return new WP_Error( 'missing_data', 'Missing required fields.', array( 'status' => 400 ) );
+    }
+
+    $correct_pin = get_option('loyalty_waiter_pin', '');
+    if ( empty($correct_pin) ) {
+        return new WP_Error( 'no_pin_set', 'Waiter PIN not configured. Contact restaurant.', array( 'status' => 500 ) );
+    }
+    if ( $pin !== $correct_pin ) {
+        return rest_ensure_response( array(
+            'success' => false,
+            'message' => 'PIN non corretto. Riprova.'
+        ) );
+    }
+
+    $redemptions_table = $wpdb->prefix . 'loyalty_redemptions';
+
+    $redemption = $wpdb->get_row( $wpdb->prepare(
+        "SELECT * FROM $redemptions_table WHERE codice_univoco = %s AND email = %s",
+        $reward_id, $email
+    ) );
+
+    if ( ! $redemption ) {
+        return rest_ensure_response( array(
+            'success' => false,
+            'message' => 'Codice o email non validi.'
+        ) );
+    }
+
+    if ( $redemption->stato === 'claimed' ) {
+        return rest_ensure_response( array(
+            'success' => false,
+            'message' => 'Questo codice è già stato riscattato.'
+        ) );
+    }
+
+    $wpdb->update(
+        $redemptions_table,
+        array( 'stato' => 'claimed', 'data_riscatto' => current_time('mysql') ),
+        array( 'codice_univoco' => $reward_id, 'email' => $email )
+    );
+
+    return rest_ensure_response( array(
+        'success' => true,
+        'message' => 'Premio riscattato con successo! Buon appetito 🍽️',
+        'premio'  => $redemption->premio,
+    ) );
+}
+
+// GET: /wp-json/loyalty/v1/my-rewards/
+function ristoloyalty_rest_my_rewards( $request ) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    
+    if ( $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        status_header( 200 );
+        exit;
+    }
+
+    global $wpdb;
+
+    $email = sanitize_email( $request->get_param( 'email' ) );
+
+    if ( empty( $email ) ) {
+        return new WP_Error( 'missing_data', 'Missing email.', array( 'status' => 400 ) );
+    }
+
+    $table = $wpdb->prefix . 'loyalty_redemptions';
+    $rows  = $wpdb->get_results( $wpdb->prepare(
+        "SELECT codice_univoco, premio, data_vincita FROM $table WHERE email = %s AND stato = 'pending' ORDER BY data_vincita DESC",
+        $email
+    ) );
+
+    $rewards = array();
+    foreach ( $rows as $r ) {
+        $rewards[] = array(
+            'codice_univoco' => $r->codice_univoco,
+            'premio'         => $r->premio,
+            'data_vincita'   => date_i18n('d/m/Y H:i', strtotime($r->data_vincita)),
+        );
+    }
+
+    return rest_ensure_response( array(
+        'success' => true,
+        'rewards' => $rewards
+    ) );
+}

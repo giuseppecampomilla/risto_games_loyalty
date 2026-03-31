@@ -388,3 +388,194 @@ body {
   transform: scale(1.05);
   box-shadow: 0 8px 25px var(--accent-gold-glow), 0 0 0 6px var(--bg-dark);
 }
+
+/* Loaders & Sync Overlays */
+.loader-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-dark);
+  background-image: var(--bg-gradient);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.sync-overlay {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 20px;
+  border-radius: 30px;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  animation: slideDown 0.3s ease-out;
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@keyframes slideDown {
+  from { top: -50px; opacity: 0; }
+  to { top: 20px; opacity: 1; }
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  border-top-color: var(--accent-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Wallet specific styles */
+.wallet-item {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  max-height: 150px;
+  position: relative;
+}
+
+.wallet-item.removing {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  border-width: 0;
+  transform: scale(0.9);
+}
+
+.btn-redeem {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px var(--accent-gold-glow);
+  transition: all 0.2s ease;
+}
+
+.btn-redeem:active {
+  transform: scale(0.95);
+}
+
+/* Pin Modal Keypad */
+.pin-modal {
+  max-width: 300px;
+}
+
+.pin-display {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 16px;
+  color: var(--accent-gold);
+  transition: background 0.2s ease;
+}
+
+.pin-dot.filled {
+  background: var(--accent-gold);
+}
+
+.pin-display-text {
+  font-size: 2rem;
+  letter-spacing: 12px;
+  color: var(--accent-gold);
+  margin-bottom: 25px;
+  font-weight: 900;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  justify-items: center;
+}
+
+.key-btn {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.key-btn:active {
+  background: var(--accent-gold);
+  color: #000;
+  transform: scale(0.92);
+}
+
+.key-btn.clear {
+  font-size: 1.2rem;
+  background: transparent;
+  border: none;
+}
+
+.key-btn.submit {
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+  color: #000;
+  border: none;
+  font-weight: 800;
+  box-shadow: 0 4px 15px var(--accent-gold-glow);
+}
+
+.key-btn.submit:disabled {
+  opacity: 0.5;
+  background: #444;
+  color: #888;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.key-btn.submit:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
