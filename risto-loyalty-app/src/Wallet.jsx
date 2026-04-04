@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_BASE_URL = 'https://soundframes.netsons.org/wp-json/loyalty/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Wallet({ email, rewards, onRedeemSuccess }) {
   const [selectedReward, setSelectedReward] = useState(null);
@@ -62,7 +62,7 @@ export default function Wallet({ email, rewards, onRedeemSuccess }) {
   };
 
   return (
-    <div className="rewards-section">
+    <div className="rewards-section" id="wallet-section">
       <div className="rewards-header">
         <h3 className="section-title">I Miei Premi</h3>
       </div>

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import './Login.css';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, signupBonus = 150 }) {
   const [email, setEmail] = useState('');
   const [nome, setNome] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (email && nome) {
-      onLogin({ email, nome, punti: 150, livello: 'Silver' });
+      onLogin({ email, nome, punti: signupBonus, livello: 'Silver' });
     }
   };
 

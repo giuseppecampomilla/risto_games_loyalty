@@ -1,18 +1,42 @@
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Wheel from './Wheel';
+import ScratchCard from './ScratchCard';
+import SlotMachine from './SlotMachine';
 import Login from './Login';
 import Wallet from './Wallet';
+import Leaderboard from './Leaderboard';
 
-const API_BASE_URL = 'https://soundframes.netsons.org/wp-json/loyalty/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [activeGame, setActiveGame] = useState('wheel');
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState([]);
+  const [leaderboardTrigger, setLeaderboardTrigger] = useState(0);
+  const [appSettings, setAppSettings] = useState(null);
+  const [isMaintenance, setIsMaintenance] = useState(false);
 
   useEffect(() => {
     const initApp = async () => {
+      try {
+        const settingsRes = await fetch(`${API_BASE_URL}/settings/`);
+        if (settingsRes.ok) {
+           const settingsData = await settingsRes.json();
+           setAppSettings(settingsData);
+        } else {
+           setIsMaintenance(true);
+           setIsLoading(false);
+           return;
+        }
+      } catch (err) {
+        setIsMaintenance(true);
+        setIsLoading(false);
+        return;
+      }
+
       const savedUser = localStorage.getItem('ristoLoyaltyUser');
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
@@ -25,8 +49,8 @@ function App() {
     initApp();
   }, []);
 
-  const fetchUserData = async (email) => {
-    setIsLoading(true);
+  const fetchUserData = async (email, silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/user-data/?email=${encodeURIComponent(email)}`);
       if (response.ok) {
@@ -44,7 +68,7 @@ function App() {
     } catch (e) {
       console.error('Errore sincronizzazione:', e);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -62,8 +86,11 @@ function App() {
   };
 
   const handleWheelWin = async (wonPoints, premio) => {
+    // Aggiornamento ottimistico: aumenta i punti subito per l'animazione
+    setUser(prev => ({ ...prev, punti: prev.punti + wonPoints }));
+    
     try {
-      setIsLoading(true);
+      // Background request to WordPress without blocking the UI
       const response = await fetch(`${API_BASE_URL}/process-win/`, {
         method: 'POST',
         headers: {
@@ -80,6 +107,7 @@ function App() {
         const data = await response.json();
         
         if (data.success) {
+          // Keep the true server sync value, which might differ slightly if there were other modifiers
           setUser(prev => ({ ...prev, punti: data.punti }));
         } else {
           console.error('❌ ERRORE Server:', data.message || data.code);
@@ -88,7 +116,9 @@ function App() {
     } catch (err) {
       console.error("❌ ERRORE FETCH:", err);
     } finally {
-      await fetchUserData(user.email);
+      // Sincronizza portafoglio e altri dati silenziosamente (senza loader a schermo intero)
+      await fetchUserData(user.email, true);
+      setLeaderboardTrigger(prev => prev + 1);
     }
   };
 
@@ -104,8 +134,20 @@ function App() {
     }
   };
 
+  if (isMaintenance) {
+    return (
+      <div className="loyalty-app center-content">
+        <div className="card-glass" style={{padding: '2rem'}}>
+          <div style={{fontSize:'3rem', marginBottom:'1rem'}}>🚧</div>
+          <h2>Manutenzione in corso</h2>
+          <p>L'app è momentaneamente disconnessa. Controlla la tua connessione o riprova più tardi.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user && !isLoading) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} signupBonus={appSettings?.signup_bonus || 150} />;
   }
 
   if (!user && isLoading) {
@@ -117,7 +159,7 @@ function App() {
     );
   }
 
-  const targetPoints = 500;
+  const targetPoints = appSettings?.milestones?.[1]?.points ? parseInt(appSettings.milestones[1].points) : 500;
   const progressPercent = Math.min((user.punti / targetPoints) * 100, 100);
 
   return (
@@ -161,11 +203,25 @@ function App() {
           {activeTab === 'home' && (
             <>
               <div className="card-glass center-content" style={{marginBottom: '2rem'}}>
-                <h2 className="section-title">Premi Sempre Più Vicini</h2>
-                <p className="section-subtitle">Continua a guadagnare punti e sblocca ricompense esclusive.</p>
-                <button className="btn-spin" onClick={() => setActiveTab('ruota')}>
-                  GIRA LA RUOTA
-                </button>
+                <h2 className="section-title">Scegli il tuo gioco</h2>
+                <p className="section-subtitle">Vinci premi esclusivi o raccogli punti fedeltà in tempo reale.</p>
+                <div className={`game-selection-grid ${(appSettings?.game_type !== 'all' && appSettings?.game_type) ? 'single-game' : ''}`}>
+                  {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'ruota_fortuna') && (
+                    <button className="game-btn" onClick={() => { setActiveGame('wheel'); setActiveTab('ruota'); }}>
+                      <span className="game-icon">🎡</span> Ruota Fortunata
+                    </button>
+                  )}
+                  {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'gratta_e_vinci') && (
+                    <button className="game-btn" onClick={() => { setActiveGame('scratch'); setActiveTab('ruota'); }}>
+                      <span className="game-icon">🎟️</span> Gratta e Vinci
+                    </button>
+                  )}
+                  {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'slot_machine') && (
+                    <button className="game-btn" onClick={() => { setActiveGame('slot'); setActiveTab('ruota'); }}>
+                      <span className="game-icon">🎰</span> Slot Machine
+                    </button>
+                  )}
+                </div>
               </div>
 
               <Wallet email={user.email} rewards={rewards} onRedeemSuccess={removeReward} />
@@ -174,8 +230,50 @@ function App() {
 
           {activeTab === 'ruota' && (
             <div className="card-glass center-content" style={{ padding: '20px 10px' }}>
-               <Wheel onWin={handleWheelWin} />
+               {activeGame === 'wheel' && (
+                 <Wheel 
+                   onWin={handleWheelWin} 
+                   settings={appSettings}
+                   onGoToWallet={() => {
+                     setActiveTab('home');
+                     setTimeout(() => {
+                       const walletEl = document.getElementById('wallet-section');
+                       if (walletEl) walletEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }, 150);
+                   }}
+                 />
+               )}
+               {activeGame === 'scratch' && (
+                 <ScratchCard 
+                   onWin={handleWheelWin} 
+                   settings={appSettings}
+                   onGoToWallet={() => {
+                     setActiveTab('home');
+                     setTimeout(() => {
+                       const walletEl = document.getElementById('wallet-section');
+                       if (walletEl) walletEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }, 150);
+                   }}
+                 />
+               )}
+               {activeGame === 'slot' && (
+                 <SlotMachine 
+                   onWin={handleWheelWin} 
+                   settings={appSettings}
+                   onGoToWallet={() => {
+                     setActiveTab('home');
+                     setTimeout(() => {
+                       const walletEl = document.getElementById('wallet-section');
+                       if (walletEl) walletEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }, 150);
+                   }}
+                 />
+               )}
             </div>
+          )}
+
+          {activeTab === 'classifica' && (
+             <Leaderboard currentUser={user} refreshTrigger={leaderboardTrigger} />
           )}
 
           {activeTab === 'profilo' && (
@@ -216,11 +314,18 @@ function App() {
           <span className="nav-label">Home</span>
         </button>
         <button 
+          className={`nav-item ${activeTab === 'classifica' ? 'active' : ''}`}
+          onClick={() => setActiveTab('classifica')}
+        >
+          <span className="nav-icon">🏆</span>
+          <span className="nav-label">Classifica</span>
+        </button>
+        <button 
           className={`nav-item center-nav-action ${activeTab === 'ruota' ? 'active' : ''}`}
           onClick={() => setActiveTab('ruota')}
         >
-          <div className="nav-icon-floating">🎡</div>
-          <span className="nav-label">Ruota</span>
+          <div className="nav-icon-floating">🎲</div>
+          <span className="nav-label">Gioca</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'profilo' ? 'active' : ''}`}

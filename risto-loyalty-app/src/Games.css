@@ -1,0 +1,152 @@
+/* GAMES STYLING */
+
+/* Scratch Card */
+.scratch-card-box {
+  width: 300px;
+  height: 150px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), 0 10px 30px rgba(0,0,0,0.5);
+  border: 3px solid #fbbf24;
+  background: #18181b;
+}
+
+.scratch-prize-reveal {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle, #27272a, #09090b);
+  z-index: 1;
+  padding: 10px;
+}
+
+@keyframes shimmerMove {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  100% { transform: translateX(150%) skewX(-20deg); }
+}
+
+.shimmer-text {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  color: #fbbf24;
+}
+
+.shimmer-text::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);
+  transform: translateX(-150%) skewX(-20deg);
+  animation: shimmerMove 2s infinite;
+}
+
+.scratch-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 2;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Slot Machine */
+.slot-machine-box {
+  padding: 1.5rem;
+  background: linear-gradient(to bottom, #27272a, #18181b);
+  border: 4px solid #3f3f46;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 2px 10px rgba(255,255,255,0.1);
+}
+
+.reels-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.reel {
+  width: 80px;
+  height: 100px;
+  background: #fafafa;
+  color: #000;
+  border-radius: 8px;
+  box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+  border: 2px solid #52525b;
+  overflow: hidden;
+  position: relative;
+  display: block;
+  padding: 0;
+}
+
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.reel-symbol {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+  flex-shrink: 0;
+}
+
+/* Game Selection in Home */
+.game-selection-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.game-selection-grid.single-game {
+  align-items: center;
+}
+
+.game-selection-grid.single-game .game-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: 1.8rem;
+  font-size: 1.25rem;
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.15);
+}
+
+.game-selection-grid.single-game .game-icon {
+  font-size: 2.5rem;
+}
+
+.game-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #fbbf24;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
+}
+
+.game-icon {
+  font-size: 1.8rem;
+}

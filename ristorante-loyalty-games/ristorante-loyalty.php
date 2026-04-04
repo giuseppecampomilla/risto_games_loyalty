@@ -174,6 +174,7 @@ function ristorante_loyalty_register_settings() {
     register_setting( 'ristorante_loyalty_options', 'loyalty_game_url' );
     // Punti e Premi Casuali
     register_setting( 'ristorante_loyalty_options', 'loyalty_points_per_play' );
+    register_setting( 'ristorante_loyalty_options', 'loyalty_signup_bonus' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_win_chance' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_prize_1' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_prize_2' );
@@ -205,128 +206,189 @@ function ristorante_loyalty_register_settings() {
  * Callback per la pagina Impostazioni
  */
 function ristorante_loyalty_settings_page() {
+    $game_url = get_option('loyalty_game_url', '');
+    $is_connected = !empty($game_url) && filter_var($game_url, FILTER_VALIDATE_URL);
     ?>
+    <style>
+        .rl-tab-content { display: none; padding: 20px 0; }
+        .rl-tab-content.active { display: block; }
+        .connection-status { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; margin-left: 15px; }
+        .status-ok { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-err { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .form-table th { padding-top: 15px; }
+    </style>
+
     <div class="wrap">
-        <h1>⚙️ Impostazioni Gioco</h1>
-        
-        <div class="notice notice-info is-dismissible" style="margin-bottom: 20px;">
-            <p style="font-size: 1.1em; margin-bottom: 8px;"><strong>📌 Istruzioni e Shortcode Supportati</strong></p>
-            <p style="margin-top: 0;">Usa i seguenti shortcode all'interno di pagine o articoli WordPress per visualizzare le varie schermate del sistema Loyalty:</p>
-            <ul style="list-style-type: disc; margin-left: 20px; margin-bottom: 10px;">
-                <li><code>[loyalty_game]</code> &mdash; Mostra l'interfaccia di gioco principale (Ruota, Gratta e Vinci o Slot).</li>
-                <li><code>[loyalty_leaderboard]</code> &mdash; Mostra il tabellone con i primi 10 utenti classificati.</li>
-                <li><code>[loyalty_my_rewards]</code> &mdash; Mostra lo storico dei premi vinti ma non ancora riscattati, con la possibilità di convalidarli tramite PIN cameriere.</li>
-            </ul>
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0;">⚙️ Impostazioni App Loyalty</h1>
+            <?php if ($is_connected): ?>
+                <span class="connection-status status-ok">✅ App Connessa</span>
+            <?php else: ?>
+                <span class="connection-status status-err">❌ URL App Mancante o Invalido</span>
+            <?php endif; ?>
         </div>
+        
+        <h2 class="nav-tab-wrapper" id="rl-tabs">
+            <a href="#tab-app" class="nav-tab nav-tab-active">📱 Connessione App</a>
+            <a href="#tab-game" class="nav-tab">🎮 Parametri Gioco</a>
+            <a href="#tab-prizes" class="nav-tab">🎁 Premi e Soglie</a>
+        </h2>
 
         <form method="post" action="options.php">
             <?php settings_fields( 'ristorante_loyalty_options' ); ?>
             <?php do_settings_sections( 'ristorante_loyalty_options' ); ?>
-            <table class="form-table">
-                <tr valign="top">
-                    <th scope="row">Tipo di Gioco</th>
-                    <td>
-                        <select name="loyalty_game_type">
-                            <option value="gratta_e_vinci" <?php selected(get_option('loyalty_game_type'), 'gratta_e_vinci'); ?>>Gratta e Vinci</option>
-                            <option value="ruota_fortuna" <?php selected(get_option('loyalty_game_type'), 'ruota_fortuna'); ?>>Ruota della Fortuna</option>
-                            <option value="slot_machine" <?php selected(get_option('loyalty_game_type'), 'slot_machine'); ?>>Slot Machine</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Punti per Giocata</th>
-                    <td><input type="number" name="loyalty_points_per_play" min="1" max="1000" value="<?php echo esc_attr( get_option('loyalty_points_per_play', '10') ); ?>" /> pt</td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Probabilità di Vincita (%)</th>
-                    <td><input type="number" name="loyalty_win_chance" min="1" max="100" value="<?php echo esc_attr( get_option('loyalty_win_chance', '20') ); ?>" /></td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Premio 1</th>
-                    <td><input type="text" name="loyalty_prize_1" value="<?php echo esc_attr( get_option('loyalty_prize_1', '') ); ?>" class="regular-text" /></td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Premio 2</th>
-                    <td><input type="text" name="loyalty_prize_2" value="<?php echo esc_attr( get_option('loyalty_prize_2', '') ); ?>" class="regular-text" /></td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Premio 3</th>
-                    <td><input type="text" name="loyalty_prize_3" value="<?php echo esc_attr( get_option('loyalty_prize_3', '') ); ?>" class="regular-text" /></td>
-                </tr>
 
-                <!-- LIMITI GIOCATE -->
-                <tr valign="top">
-                    <th scope="row" colspan="2"><h2 style="margin: 20px 0 0;">⏳ Limite Giocate per Utente</h2></th>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Numero Massimo di Giocate</th>
-                    <td><input type="number" name="loyalty_max_plays" min="1" max="1000" value="<?php echo esc_attr( get_option('loyalty_max_plays', '1') ); ?>" /></td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Periodo di Tempo</th>
-                    <td>
-                        <input type="number" name="loyalty_play_period" min="1" max="365" value="<?php echo esc_attr( get_option('loyalty_play_period', '24') ); ?>" style="width:70px;" />
-                        <select name="loyalty_play_period_unit">
-                            <option value="hours" <?php selected(get_option('loyalty_play_period_unit', 'hours'), 'hours'); ?>>Ore</option>
-                            <option value="days" <?php selected(get_option('loyalty_play_period_unit', 'hours'), 'days'); ?>>Giorni</option>
-                        </select>
-                        <p class="description">Es: Massimo 1 giocata ogni 24 ore. L'utente non potrà giocare finché non scade il periodo dalla sua ultima giocata.</p>
-                    </td>
-                </tr>
+            <!-- TAB 1: CONNESSIONE APP E QR CODE -->
+            <div id="tab-app" class="rl-tab-content active">
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">URL della Web App React</th>
+                        <td>
+                            <input type="url" name="loyalty_game_url" id="loyalty_game_url" value="<?php echo esc_attr( $game_url ); ?>" class="regular-text" style="width: 400px;" placeholder="https://tuo-ristorante.netlify.app" />
+                            <p class="description">Inserisci l'URL pubblico della tua Web App. Questo URL verrà usato per generare il QR Code.</p>
+                        </td>
+                    </tr>
+                </table>
 
-                <!-- ===== SEZIONE SOGLIE FIDELITY ===== -->
-                <tr><td colspan="2"><hr><h2 style="margin:0;">🏆 Soglie Fidelity</h2><p style="color:#aaa;margin:.3rem 0 0;">Premio assegnato automaticamente al raggiungimento dei punti (ha priorità sul premio casuale).</p></td></tr>
-                <?php for ($i = 1; $i <= 3; $i++) : ?>
-                <tr valign="top">
-                    <th scope="row">Soglia <?php echo $i; ?></th>
-                    <td style="display:flex;gap:10px;align-items:center;">
-                        <input type="number" name="loyalty_milestone_<?php echo $i; ?>_points" min="0" placeholder="Punti (es. 100)" value="<?php echo esc_attr( get_option('loyalty_milestone_' . $i . '_points', '') ); ?>" style="width:120px;" />
-                        &nbsp;pt →&nbsp;
-                        <input type="text" name="loyalty_milestone_<?php echo $i; ?>_prize" placeholder="Premio (es. Cena per Due 🍽️)" value="<?php echo esc_attr( get_option('loyalty_milestone_' . $i . '_prize', '') ); ?>" style="width:280px;" />
-                    </td>
-                </tr>
-                <?php endfor; ?>
-
-                <!-- ===== CAMPO URL PER QR CODE ===== -->
-                <tr><td colspan="2"><hr><h2 style="margin:0;">📱 QR Code Gioco</h2><p style="color:#666;margin:.3rem 0 0;">Inserisci l'URL della pagina WordPress in cui hai incollato lo shortcode <code>[loyalty_game]</code>.</p></td></tr>
-                <tr valign="top">
-                    <th scope="row">URL della Pagina Gioco</th>
-                    <td><input type="url" name="loyalty_game_url" id="loyalty_game_url" value="<?php echo esc_attr( get_option('loyalty_game_url', '') ); ?>" class="large-text" placeholder="https://tuo-sito.com/gioca" /></td>
-                </tr>
-
-            </table>
-            <?php submit_button('Salva Impostazioni'); ?>
-        </form>
-
-        <!-- ===== SEZIONE QR CODE (fuori dal form) ===== -->
-        <?php $game_url = get_option('loyalty_game_url', ''); ?>
-        <div style="margin-top:2rem;padding:1.5rem;background:#fff;border:1px solid #ddd;border-radius:8px;max-width:500px;">
-            <h2 style="margin-top:0;">📱 Il tuo QR Code</h2>
-            <?php if ( $game_url ) : ?>
-                <p style="color:#555;">Scansionando questo QR code il cliente aprirà direttamente la pagina del gioco.</p>
-                <div style="display:flex;align-items:flex-start;gap:2rem;flex-wrap:wrap;">
-                    <div>
-                        <img id="rl-qr-img"
-                             src="https://api.qrserver.com/v1/create-qr-code/?data=<?php echo urlencode($game_url); ?>&size=200x200&color=000000&bgcolor=ffffff&qzone=2"
-                             alt="QR Code"
-                             width="200" height="200"
-                             style="border:6px solid #111;border-radius:8px;display:block;">
-                        <p style="font-size:.75rem;color:#aaa;margin:.4rem 0 0;word-break:break-all;max-width:200px;"><?php echo esc_html($game_url); ?></p>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:.8rem;padding-top:.5rem;">
-                        <a id="rl-qr-download"
-                           href="https://api.qrserver.com/v1/create-qr-code/?data=<?php echo urlencode($game_url); ?>&size=600x600&color=000000&bgcolor=ffffff&qzone=2"
-                           download="qrcode-gioco.png"
-                           class="button button-primary">⬇️ Scarica QR Code (600×600)</a>
-                        <a href="<?php echo esc_url($game_url); ?>" target="_blank" class="button">🔗 Apri pagina gioco</a>
-                    </div>
+                <div style="margin-top:2rem;padding:1.5rem;background:#fff;border:1px solid #ddd;border-radius:8px;max-width:550px;">
+                    <h2 style="margin-top:0;">📱 QR Code Dinamico</h2>
+                    <?php if ( $is_connected ) : ?>
+                        <p style="color:#555;">I clienti possono inquadrare questo QR Code per aprire la Web App direttamente sul loro smartphone.</p>
+                        <div style="display:flex;align-items:flex-start;gap:2rem;flex-wrap:wrap;margin-top: 15px;">
+                            <div>
+                                <img id="rl-qr-img"
+                                     src="https://api.qrserver.com/v1/create-qr-code/?data=<?php echo urlencode($game_url); ?>&size=200x200&color=000000&bgcolor=ffffff&qzone=2"
+                                     alt="QR Code" width="200" height="200" style="border:6px solid #111;border-radius:8px;display:block;">
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:.8rem;padding-top:.5rem;">
+                                <a id="rl-qr-download" href="https://api.qrserver.com/v1/create-qr-code/?data=<?php echo urlencode($game_url); ?>&size=600x600&color=000000&bgcolor=ffffff&qzone=2" download="qrcode-app.png" class="button button-primary">⬇️ Scarica per Stampa</a>
+                                <a href="<?php echo esc_url($game_url); ?>" target="_blank" class="button">🔗 Apri Web App</a>
+                            </div>
+                        </div>
+                    <?php else : ?>
+                        <p style="color:#999;">⚠️ Salva prima un URL valido per generare il QR Code della tua App.</p>
+                    <?php endif; ?>
                 </div>
-            <?php else : ?>
-                <p style="color:#999;">👆 Salva prima l'URL della pagina gioco nel form qui sopra per generare il QR Code.</p>
-            <?php endif; ?>
-        </div>
+            </div>
 
+            <!-- TAB 2: PARAMETRI GIOCO -->
+            <div id="tab-game" class="rl-tab-content">
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">Gioco Attivo</th>
+                        <td>
+                            <select name="loyalty_game_type">
+                                <option value="all" <?php selected(get_option('loyalty_game_type', 'all'), 'all'); ?>>Tutti (Visualizza tutti i giochi)</option>
+                                <option value="ruota_fortuna" <?php selected(get_option('loyalty_game_type'), 'ruota_fortuna'); ?>>Ruota</option>
+                                <option value="slot_machine" <?php selected(get_option('loyalty_game_type'), 'slot_machine'); ?>>Slot</option>
+                                <option value="gratta_e_vinci" <?php selected(get_option('loyalty_game_type'), 'gratta_e_vinci'); ?>>Gratta e Vinci</option>
+                            </select>
+                            <p class="description">Il minigioco che verrà mostrato sull'applicazione React.</p>
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Punti per Giocata Base</th>
+                        <td><input type="number" name="loyalty_points_per_play" min="1" max="1000" value="<?php echo esc_attr( get_option('loyalty_points_per_play', '10') ); ?>" /> pt</td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Bonus di Iscrizione</th>
+                        <td><input type="number" name="loyalty_signup_bonus" min="0" max="10000" value="<?php echo esc_attr( get_option('loyalty_signup_bonus', '150') ); ?>" /> pt</td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Probabilità di Vincita (%)</th>
+                        <td><input type="number" name="loyalty_win_chance" min="1" max="100" value="<?php echo esc_attr( get_option('loyalty_win_chance', '20') ); ?>" /> %</td>
+                    </tr>
+                </table>
+
+                <h2 style="margin: 30px 0 10px;">⏳ Tempi di Attesa (Anti-Abuso)</h2>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">Numero Massimo Giocate</th>
+                        <td><input type="number" name="loyalty_max_plays" min="1" max="1000" value="<?php echo esc_attr( get_option('loyalty_max_plays', '1') ); ?>" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Periodo di Ricarica</th>
+                        <td>
+                            <input type="number" name="loyalty_play_period" min="1" max="365" value="<?php echo esc_attr( get_option('loyalty_play_period', '24') ); ?>" style="width:70px;" />
+                            <select name="loyalty_play_period_unit">
+                                <option value="hours" <?php selected(get_option('loyalty_play_period_unit', 'hours'), 'hours'); ?>>Ore</option>
+                                <option value="days" <?php selected(get_option('loyalty_play_period_unit', 'hours'), 'days'); ?>>Giorni</option>
+                            </select>
+                            <p class="description">Es: 1 giocata ogni 24 ore. L'utente non potrà giocare fino alla scadenza del tempo.</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- TAB 3: PREMI E SOGLIE -->
+            <div id="tab-prizes" class="rl-tab-content">
+                <table class="form-table">
+                    <tr><td colspan="2"><h2 style="margin:0;">🎲 Premi Minigiochi (Estratti Casualmente)</h2></td></tr>
+                    <tr valign="top">
+                        <th scope="row">Premio 1 (Es: Caffè Gratis)</th>
+                        <td><input type="text" name="loyalty_prize_1" value="<?php echo esc_attr( get_option('loyalty_prize_1', '') ); ?>" class="regular-text" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Premio 2 (Es: Sconto 10%)</th>
+                        <td><input type="text" name="loyalty_prize_2" value="<?php echo esc_attr( get_option('loyalty_prize_2', '') ); ?>" class="regular-text" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Premio 3 (Es: Dolce Omag.)</th>
+                        <td><input type="text" name="loyalty_prize_3" value="<?php echo esc_attr( get_option('loyalty_prize_3', '') ); ?>" class="regular-text" /></td>
+                    </tr>
+
+                    <tr><td colspan="2"><hr><h2 style="margin:0;">🏆 Traguardi Punti (Fidelity)</h2></td></tr>
+                    <?php for ($i = 1; $i <= 3; $i++) : ?>
+                    <tr valign="top">
+                        <th scope="row">Soglia <?php echo $i; ?></th>
+                        <td style="display:flex;gap:10px;align-items:center;">
+                            <input type="number" name="loyalty_milestone_<?php echo $i; ?>_points" min="0" placeholder="Punti (es. 100)" value="<?php echo esc_attr( get_option('loyalty_milestone_' . $i . '_points', '') ); ?>" style="width:120px;" />
+                            &nbsp;pt →&nbsp;
+                            <input type="text" name="loyalty_milestone_<?php echo $i; ?>_prize" placeholder="Premio Fisso (es. Cena Omag.)" value="<?php echo esc_attr( get_option('loyalty_milestone_' . $i . '_prize', '') ); ?>" style="width:280px;" />
+                        </td>
+                    </tr>
+                    <?php endfor; ?>
+                </table>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <?php submit_button('Salva Tutte Le Impostazioni', 'primary', 'submit', false); ?>
+            </div>
+        </form>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('#rl-tabs .nav-tab');
+        const contents = document.querySelectorAll('.rl-tab-content');
+        
+        // Mantieni la tab attiva salvata in sessionStorage
+        const activeTab = sessionStorage.getItem('rl_active_tab') || '#tab-app';
+        
+        function switchTab(targetId) {
+            tabs.forEach(t => t.classList.remove('nav-tab-active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            const activeLink = document.querySelector(`a[href="${targetId}"]`);
+            const activeContent = document.querySelector(targetId);
+            
+            if(activeLink && activeContent) {
+                activeLink.classList.add('nav-tab-active');
+                activeContent.classList.add('active');
+                sessionStorage.setItem('rl_active_tab', targetId);
+            }
+        }
+        
+        switchTab(activeTab);
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchTab(this.getAttribute('href'));
+            });
+        });
+    });
+    </script>
     <?php
 }
 

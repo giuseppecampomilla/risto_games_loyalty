@@ -14,7 +14,8 @@ const PRIZES = [
 
 
 
-export default function Wheel({ onWin }) {
+export default function Wheel({ onWin, onGoToWallet, settings }) {
+  const basePoints = settings?.points_per_play || 10;
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -47,14 +48,20 @@ export default function Wheel({ onWin }) {
       const wonPrizeStr = PRIZES[prizeIndex];
       setWonPrize(wonPrizeStr);
       if (wonPrizeStr === 'Riprova') {
-        setWinMessage('Hai comunque guadagnato 10 Punti Fedeltà per aver giocato!');
+        setWinMessage(`Hai comunque guadagnato ${basePoints} Punti Fedeltà per aver giocato!`);
         if (onWin) {
-          onWin(10, null);
+          onWin(basePoints, null);
         }
       } else {
-        setWinMessage(`🎉 Hai vinto: ${wonPrizeStr}! Aggiunto al tuo Wallet! (+10 Punti Fedeltà inclusi)`);
+        if (window.confetti) {
+          window.confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+        }
+        if (navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+        }
+        setWinMessage(`🎉 Hai vinto: ${wonPrizeStr}! Aggiunto al tuo Wallet! (+${basePoints} Punti Fedeltà inclusi)`);
         if (onWin) {
-          onWin(10, wonPrizeStr);
+          onWin(basePoints, wonPrizeStr);
         }
       }
       setShowModal(true);
@@ -129,7 +136,7 @@ export default function Wheel({ onWin }) {
             <button className="modal-btn close-only" onClick={closeModal}>Chiudi</button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button className="modal-btn" onClick={closeModal}>Vai al Wallet</button>
+              <button className="modal-btn" onClick={() => { closeModal(); if(onGoToWallet) onGoToWallet(); }}>Vai al Wallet</button>
               <button className="modal-btn close-only" style={{ background: 'transparent', color: '#888', padding: '8px', boxShadow: 'none', border: 'none' }} onClick={closeModal}>Più tardi</button>
             </div>
           )}

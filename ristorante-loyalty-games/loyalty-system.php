@@ -1015,6 +1015,12 @@ function ristoloyalty_get_my_rewards_handler() {
 add_action( 'rest_api_init', 'ristoloyalty_register_rest_routes' );
 
 function ristoloyalty_register_rest_routes() {
+    register_rest_route( 'loyalty/v1', '/settings/', array(
+        'methods'  => 'GET',
+        'callback' => 'ristoloyalty_rest_settings',
+        'permission_callback' => '__return_true',
+    ));
+
     register_rest_route( 'loyalty/v1', '/user-data/', array(
         'methods'  => 'GET',
         'callback' => 'ristoloyalty_rest_get_user_data',
@@ -1044,6 +1050,12 @@ function ristoloyalty_register_rest_routes() {
         'callback' => 'ristoloyalty_rest_my_rewards',
         'permission_callback' => '__return_true',
     ));
+
+    register_rest_route( 'loyalty/v1', '/leaderboard/', array(
+        'methods'  => 'GET',
+        'callback' => 'ristoloyalty_rest_leaderboard',
+        'permission_callback' => '__return_true',
+    ));
 }
 
 // Global CORS preflight handler
@@ -1067,6 +1079,27 @@ add_action( 'rest_api_init', function() {
         return $value;
     });
 }, 15 );
+
+// GET: /wp-json/loyalty/v1/settings/
+function ristoloyalty_rest_settings( $request ) {
+    $settings = array(
+        'game_type' => get_option('loyalty_game_type', 'all'),
+        'points_per_play' => (int) get_option('loyalty_points_per_play', 10),
+        'signup_bonus' => (int) get_option('loyalty_signup_bonus', 150),
+        'win_chance' => (int) get_option('loyalty_win_chance', 20),
+        'prizes' => array(
+            get_option('loyalty_prize_1', ''),
+            get_option('loyalty_prize_2', ''),
+            get_option('loyalty_prize_3', '')
+        ),
+        'milestones' => array(
+            1 => array('points' => get_option('loyalty_milestone_1_points', ''), 'prize' => get_option('loyalty_milestone_1_prize', '')),
+            2 => array('points' => get_option('loyalty_milestone_2_points', ''), 'prize' => get_option('loyalty_milestone_2_prize', '')),
+            3 => array('points' => get_option('loyalty_milestone_3_points', ''), 'prize' => get_option('loyalty_milestone_3_prize', '')),
+        )
+    );
+    return rest_ensure_response( $settings );
+}
 
 // GET: /wp-json/ristoloyalty/v1/user-data/?email=...
 function ristoloyalty_rest_get_user_data( $request ) {
@@ -1205,7 +1238,7 @@ function ristoloyalty_rest_process_win( $request ) {
             array( 'id' => $user->id )
         );
     } else {
-        // Create user
+        // Create user with a 150 points sign-up bonus
         $p_start = current_time('mysql');
         
         $premi_vinti_arr = array();
@@ -1215,6 +1248,10 @@ function ristoloyalty_rest_process_win( $request ) {
                 'data'   => current_time('mysql')
             );
         }
+
+        $signup_bonus = 150;
+        $new_punti = $signup_bonus + $points;
+        $new_totali = $signup_bonus + $points;
 
         $wpdb->insert( $table_name, array(
             'nome'         => $name ? $name : 'Utente Sconosciuto',
@@ -1353,5 +1390,40 @@ function ristoloyalty_rest_my_rewards( $request ) {
     return rest_ensure_response( array(
         'success' => true,
         'rewards' => $rewards
+    ) );
+}
+
+// GET: /wp-json/loyalty/v1/leaderboard/
+function ristoloyalty_rest_leaderboard( $request ) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    
+    if ( $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        status_header( 200 );
+        exit;
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'loyalty_customers';
+
+    // Recupera i primi 10 utenti ordinati per punti_totali decrescenti
+    // (Oppure per 'punti' se vuoi solo quelli non ancora spesi, preferibile 'punti_totali' per una leaderboard globale)
+    $leaders = $wpdb->get_results(
+        "SELECT nome, punti, punti_totali FROM $table_name ORDER BY punti_totali DESC LIMIT 10"
+    );
+
+    $leaderboard = array();
+    foreach ( $leaders as $l ) {
+        $leaderboard[] = array(
+            'nome'         => $l->nome,
+            'punti'        => (int) $l->punti,
+            'punti_totali' => (int) $l->punti_totali
+        );
+    }
+
+    return rest_ensure_response( array(
+        'success'     => true,
+        'leaderboard' => $leaderboard
     ) );
 }

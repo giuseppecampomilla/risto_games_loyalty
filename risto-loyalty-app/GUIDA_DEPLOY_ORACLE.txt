@@ -1,0 +1,94 @@
+========================================================================
+   GUIDA AL DEPLOY DELL'APP REACT SU ORACLE CLOUD (UBUNTU/LINUX)
+========================================================================
+
+Questa guida riassume i passaggi per mettere online l'app "Risto Loyalty" 
+sul tuo nuovo server Oracle Cloud utilizzando Nginx.
+
+------------------------------------------------------------------------
+1. PREPARAZIONE DEL SERVER ORACLE
+------------------------------------------------------------------------
+Assicurati di aver installato Node.js e Nginx sul tuo server Oracle.
+
+Aggiorna il server e installa Nginx:
+  sudo apt update
+  sudo apt install nginx -y
+
+Installa Node.js (se non è già presente, tramite NVM o apt):
+  sudo apt install nodejs npm -y
+
+
+------------------------------------------------------------------------
+2. TRASFERIMENTO DELL'APP
+------------------------------------------------------------------------
+Scarica o clona i sorgenti della tua App React (risto-loyalty-app) sul 
+server Oracle (ad es. in una cartella dentro `/var/www/` o nella tua home).
+
+Es:
+  cd /var/www/
+  git clone <tuo-repo-react> risto-loyalty-app
+  cd risto-loyalty-app
+
+
+------------------------------------------------------------------------
+3. CONFIGURAZIONE E BUILD
+------------------------------------------------------------------------
+Modifica il file ".env" all'interno della cartella dell'app in modo che
+punti al tuo vero backend WordPress (anziché l'ambiente di test).
+
+Apri il file:
+  nano .env
+
+Assicurati che VITE_API_BASE_URL sia l'URL finale del tuo WP. Es:
+  VITE_API_BASE_URL=https://tuosito.com/wp-json/loyalty/v1
+
+Adesso scarica i pacchetti NPM e avvia la compilazione:
+  npm install
+  npm run build
+
+Verrà creata la cartella "dist/": questa contiene l'HTML, il JS e il CSS 
+pronti e "Agnostici" per andare online.
+
+
+------------------------------------------------------------------------
+4. CONFIGURARE NGINX
+------------------------------------------------------------------------
+L'app React (Single Page Application) richiede che Nginx reindirizzi tutto 
+verso `index.html` (altrimenti otterrai un errore 404 al refresh della pagina).
+
+Crea una configurazione Nginx dedicata in /etc/nginx/sites-available/:
+
+  sudo nano /etc/nginx/sites-available/loyalty-app
+
+Incolla questa configurazione di base:
+
+  server {
+      listen 80;
+      listen [::]:80;
+      
+      # Modifica qui inserendo il vero IP di Oracle o il Dominio!
+      server_name tuo-dominio.com o_ip_del_server;
+
+      # Punta alla cartella DIST che hai generato prima
+      root /var/www/risto-loyalty-app/dist;
+      index index.html;
+
+      location / {
+          # IMPORTANTE PER REACT: fallback a index.html
+          try_files $uri $uri/ /index.html;
+      }
+  }
+
+Abilita il sito:
+  sudo ln -s /etc/nginx/sites-available/loyalty-app /etc/nginx/sites-enabled/
+
+Verifica la sintassi e ricarica Nginx:
+  sudo nginx -t
+  sudo systemctl reload nginx
+
+
+------------------------------------------------------------------------
+Finito! 🚀 
+Visitando l'IP di Oracle Cloud o il dominio, l'App si caricherà.
+Qualsiasi cambiamento al sorgente richiederà un nuovo `npm run build`.
+========================================================================
