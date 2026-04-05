@@ -1096,7 +1096,10 @@ function ristoloyalty_rest_settings( $request ) {
             1 => array('points' => get_option('loyalty_milestone_1_points', ''), 'prize' => get_option('loyalty_milestone_1_prize', '')),
             2 => array('points' => get_option('loyalty_milestone_2_points', ''), 'prize' => get_option('loyalty_milestone_2_prize', '')),
             3 => array('points' => get_option('loyalty_milestone_3_points', ''), 'prize' => get_option('loyalty_milestone_3_prize', '')),
-        )
+        ),
+        'max_plays' => (int) get_option('loyalty_max_plays', 1),
+        'play_period' => (int) get_option('loyalty_play_period', 24),
+        'play_period_unit' => get_option('loyalty_play_period_unit', 'hours')
     );
     return rest_ensure_response( $settings );
 }
@@ -1129,7 +1132,9 @@ function ristoloyalty_rest_get_user_data( $request ) {
             'nome'         => $user->nome,
             'email'        => $user->email,
             'punti'        => (int) $user->punti,
-            'punti_totali' => (int) $user->punti_totali
+            'punti_totali' => (int) $user->punti_totali,
+            'play_count'   => (int) $user->play_count,
+            'period_start' => $user->period_start
         ),
         'rewards' => $pending_rewards
     ) );
@@ -1211,6 +1216,35 @@ function ristoloyalty_rest_process_win( $request ) {
     $new_totali = $points;
 
     if ( $user ) {
+        // --- LOGICA LIMITE GIOCATE (Anti-Abuso) ---
+        $max_plays   = intval( get_option('loyalty_max_plays', 1) );
+        $play_period = intval( get_option('loyalty_play_period', 24) );
+        $period_unit = get_option('loyalty_play_period_unit', 'hours');
+        $period_hours = ($period_unit === 'days') ? $play_period * 24 : $play_period;
+
+        $now = current_time('timestamp');
+        $p_start = $user->period_start ? strtotime($user->period_start) : 0;
+        
+        if ( ! $p_start ) {
+            $p_start = $now;
+            $user->play_count = 0;
+        }
+
+        $hours_passed = ($now - $p_start) / 3600;
+
+        if ( $hours_passed >= $period_hours ) {
+            // Reset periodo
+            $new_play_count = 1;
+            $new_period_start = current_time('mysql');
+        } else {
+            // Siamo ancora nel periodo
+            if ( $user->play_count >= $max_plays ) {
+                return new WP_Error( 'limit_reached', 'Hai già raggiunto il limite massimo di giocate per questo periodo.', array( 'status' => 403 ) );
+            }
+            $new_play_count = (int)$user->play_count + 1;
+            $new_period_start = $user->period_start;
+        }
+
         $new_punti = (int) $user->punti + $points;
         $new_totali = (int) $user->punti_totali + $points;
 
@@ -1233,6 +1267,8 @@ function ristoloyalty_rest_process_win( $request ) {
             array( 
                 'punti' => $new_punti, 
                 'punti_totali' => $new_totali, 
+                'play_count'   => $new_play_count,
+                'period_start' => $new_period_start,
                 'premi_vinti' => wp_json_encode( $premi_vinti_arr ) 
             ),
             array( 'id' => $user->id )
@@ -1249,7 +1285,7 @@ function ristoloyalty_rest_process_win( $request ) {
             );
         }
 
-        $signup_bonus = 150;
+        $signup_bonus = (int)get_option('loyalty_signup_bonus', 150);
         $new_punti = $signup_bonus + $points;
         $new_totali = $signup_bonus + $points;
 
