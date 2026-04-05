@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Games.css';
 
-const SYMBOLS = ['🍕', '🍷', '🍺', '🍝', '🍰'];
+const SYMBOLS = ['🍕', '🍷', '🍺', '🍝', '🍰', '🥩', '🥗', '☕'];
 const REEL_HEIGHT = 100; // Altezza di ogni simbolo in px
 
-export default function SlotMachine({ onWin, onGoToWallet, settings }) {
+export default function SlotMachine({ onWin, onGoToWallet, settings, canPlay = true }) {
   const basePoints = settings?.points_per_play || 10;
   const getRandomSymbol = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
 
@@ -23,33 +23,33 @@ export default function SlotMachine({ onWin, onGoToWallet, settings }) {
   const [prizeResult, setPrizeResult] = useState('');
 
   const spin = () => {
-    if (isSpinning || isSubmitted || gameLocked) return;
+    if (isSpinning || isSubmitted || gameLocked || !canPlay) return;
     setIsSpinning(true);
     setIsSubmitted(true); // Blocca il pulsante istantaneamente
     setShowModal(false);
     
-    // 1. Calcolo del risultato finale PRIMA dell'animazione
-    const finalReels = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
-    const chance = Math.random();
+    // 1. Calcolo del risultato finale basato su WIN_CHANCE
+    const winChance = settings?.win_chance || 20;
+    const isWinner = Math.floor(Math.random() * 100) < winChance;
     
-    if (chance > 0.8) {
+    const finalReels = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
+    
+    if (isWinner) {
       // Jackpot (3 match)
       finalReels[1] = finalReels[0];
       finalReels[2] = finalReels[0];
-    } else if (chance > 0.45) {
-      // Premio piccolo (2 match)
-      finalReels[1] = finalReels[0];
-      while (finalReels[2] === finalReels[0]) finalReels[2] = getRandomSymbol();
     } else {
-      // 0 match
-      while (finalReels[1] === finalReels[0]) finalReels[1] = getRandomSymbol();
-      while (finalReels[2] === finalReels[0] || finalReels[2] === finalReels[1]) finalReels[2] = getRandomSymbol();
+      // 0 match o max 2 match (ma contiamo come perdita)
+      while (finalReels[1] === finalReels[0] && finalReels[2] === finalReels[0]) {
+          finalReels[1] = getRandomSymbol();
+          finalReels[2] = getRandomSymbol();
+      }
     }
 
     // 2. Creazione delle strisce CSS
     const newConfig = reelsConfig.map((col, i) => {
       const currentSymbol = col.symbols[col.symbols.length - 1] || getRandomSymbol();
-      const numRotations = 25 + i * 15; // Rullo 1 scorre di più, rullo 2 ancora di più
+      const numRotations = 25 + i * 15; 
       
       const newSymbols = [currentSymbol];
       for (let j = 0; j < numRotations - 2; j++) {
@@ -69,33 +69,34 @@ export default function SlotMachine({ onWin, onGoToWallet, settings }) {
     // 3. Attesa della fine delle animazioni
     const maxDuration = 1.5 + 2 * 1.0; 
     setTimeout(() => {
-      finalizeSpin(finalReels);
+      finalizeSpin(finalReels, isWinner);
     }, (maxDuration * 1000) + 300);
   };
 
-  const finalizeSpin = (final) => {
-    let matches = 0;
-    if (final[0] === final[1] && final[1] === final[2]) matches = 3;
-    else if (final[0] === final[1] || final[1] === final[2] || final[0] === final[2]) matches = 2;
+  const finalizeSpin = (final, isWinner) => {
+    let wonPrizeStr = 'Ritenta';
     
-    let wonPrizeStr = 'Riprova';
-    if (matches === 3) wonPrizeStr = 'Sconto 20%';
-    else if (matches === 2) wonPrizeStr = 'Caffè Omaggio';
+    if (isWinner) {
+        const backendPrizes = settings?.prizes?.filter(p => p && p.trim() !== '') || [];
+        if (backendPrizes.length > 0) {
+            wonPrizeStr = backendPrizes[Math.floor(Math.random() * backendPrizes.length)];
+        }
+    }
     
     setPrizeResult(wonPrizeStr);
     setIsSpinning(false);
     
-    if (wonPrizeStr === 'Riprova') {
+    if (wonPrizeStr === 'Ritenta') {
       setWinMessage(`Nessuna combinazione. Hai guadagnato ${basePoints} Punti Fedeltà per la tua giocata!`);
       if (onWin) onWin(basePoints, null);
     } else {
-      if (window.confetti && matches === 3) {
+      if (window.confetti) {
         window.confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
       }
       if (navigator.vibrate) {
-        navigator.vibrate(matches === 3 ? [200, 100, 200, 100, 200] : [100, 50, 100]);
+        navigator.vibrate([200, 100, 200, 100, 200]);
       }
-      setWinMessage(`🎉 Combinazione vincente! Hai vinto: ${wonPrizeStr}! (+${basePoints} Punti inclusi)`);
+      setWinMessage(`🎉 JACKPOT! Hai vinto: ${wonPrizeStr}! (+${basePoints} Punti inclusi)`);
       if (onWin) onWin(basePoints, wonPrizeStr);
     }
     
@@ -144,22 +145,22 @@ export default function SlotMachine({ onWin, onGoToWallet, settings }) {
           </div>
           
           <button 
-            className={`btn-spin btn-slot mt-4 ${isSpinning || isSubmitted ? 'disabled' : ''}`}
+            className={`btn-spin btn-slot mt-4 ${(isSpinning || isSubmitted || !canPlay) ? 'disabled' : ''}`}
             onClick={spin}
-            disabled={isSpinning || isSubmitted}
-            style={{marginTop: '2.5rem', width: '100%', maxWidth: '300px'}}
+            disabled={isSpinning || isSubmitted || !canPlay}
+            style={{marginTop: '2.5rem', width: '100%', maxWidth: '300px', opacity: !canPlay && !isSubmitted ? 0.5 : 1}}
           >
-            {isSpinning ? 'GIRANDO...' : 'TIRA LA LEVA'}
+            {isSpinning ? 'GIRANDO...' : (!canPlay && !isSubmitted ? 'LIMITE RAGGIUNTO' : 'TIRA LA LEVA')}
           </button>
         </>
       )}
 
       <div className={`modal-overlay ${showModal ? 'show' : ''}`}>
         <div className="modal-content">
-          <div className="modal-title">{prizeResult === 'Riprova' ? 'Peccato!' : 'JACKPOT!'}</div>
+          <div className="modal-title">{prizeResult === 'Ritenta' ? 'Peccato!' : 'JACKPOT!'}</div>
           <div className="modal-body">{winMessage}</div>
           
-          {prizeResult === 'Riprova' ? (
+          {prizeResult === 'Ritenta' ? (
             <button className="modal-btn close-only" onClick={handleModalClose}>Chiudi</button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -172,3 +173,4 @@ export default function SlotMachine({ onWin, onGoToWallet, settings }) {
     </div>
   );
 }
+

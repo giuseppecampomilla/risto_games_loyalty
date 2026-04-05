@@ -1319,6 +1319,8 @@ function ristoloyalty_rest_process_win( $request ) {
         'success'        => true,
         'punti'          => $new_punti,
         'codice_univoco' => $codice_univoco,
+        'play_count'     => $new_play_count,
+        'period_start'   => $new_period_start,
         'message'        => 'Points and reward processed successfully.'
     ) );
 }

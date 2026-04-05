@@ -20,6 +20,12 @@ function App() {
   const [isMaintenance, setIsMaintenance] = useState(false);
 
   useEffect(() => {
+    if (user) {
+      localStorage.setItem('ristoLoyaltyUser', JSON.stringify(user));
+    }
+  }, [user]);
+
+  useEffect(() => {
     const initApp = async () => {
       try {
         const settingsRes = await fetch(`${API_BASE_URL}/settings/`);
@@ -60,7 +66,9 @@ function App() {
             ...prev,
             punti: data.user.punti,
             punti_totali: data.user.punti_totali || prev.punti,
-            nome: data.user.nome || prev.nome
+            nome: data.user.nome || prev.nome,
+            play_count: data.user.play_count,
+            period_start: data.user.period_start
           }));
           setRewards(data.rewards || []);
         }
@@ -107,11 +115,22 @@ function App() {
         const data = await response.json();
         
         if (data.success) {
-          // Keep the true server sync value, which might differ slightly if there were other modifiers
-          setUser(prev => ({ ...prev, punti: data.punti }));
+          // Sync all user data fields returned by process-win
+          setUser(prev => ({ 
+            ...prev, 
+            punti: data.punti,
+            play_count: data.play_count,
+            period_start: data.period_start
+          }));
         } else {
           console.error('❌ ERRORE Server:', data.message || data.code);
         }
+      } else if (response.status === 403) {
+        // Limit reached on server side
+        const data = await response.json();
+        alert("⚠️ " + (data.message || "Hai già raggiunto il limite di giocate!"));
+        // Sincronizza subito i dati per riflettere il blocco nel frontend
+        await fetchUserData(user.email, true);
       }
     } catch (err) {
       console.error("❌ ERRORE FETCH:", err);
@@ -132,6 +151,45 @@ function App() {
     } else {
       setRewards(prev => prev.filter(r => r.codice_univoco !== codice));
     }
+  };
+
+  const canUserPlay = () => {
+    if (!user || !appSettings) return true;
+    
+    const maxPlays = appSettings.max_plays || 1;
+    const playPeriod = appSettings.play_period || 24;
+    const periodUnit = appSettings.play_period_unit || 'hours';
+    const periodMs = (periodUnit === 'days' ? playPeriod * 24 : playPeriod) * 60 * 60 * 1000;
+
+    if (!user.period_start) return true;
+
+    const startTime = new Date(user.period_start).getTime();
+    const now = new Date().getTime();
+    
+    if (now - startTime >= periodMs) return true;
+    
+    return user.play_count < maxPlays;
+  };
+
+  const getRemainingTimeMsg = () => {
+    if (!user || !appSettings || !user.period_start) return "";
+    
+    const playPeriod = appSettings.play_period || 24;
+    const periodUnit = appSettings.play_period_unit || 'hours';
+    const periodMs = (periodUnit === 'days' ? playPeriod * 24 : playPeriod) * 60 * 60 * 1000;
+    
+    const startTime = new Date(user.period_start).getTime();
+    const now = new Date().getTime();
+    const nextPlayTime = startTime + periodMs;
+    const remainingMs = nextPlayTime - now;
+    
+    if (remainingMs <= 0) return "";
+    
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) return `Riprova tra ${hours}h e ${minutes}m`;
+    return `Riprova tra ${minutes} minuti`;
   };
 
   if (isMaintenance) {
@@ -206,20 +264,29 @@ function App() {
                 <h2 className="section-title">Scegli il tuo gioco</h2>
                 <p className="section-subtitle">Vinci premi esclusivi o raccogli punti fedeltà in tempo reale.</p>
                 <div className={`game-selection-grid ${(appSettings?.game_type !== 'all' && appSettings?.game_type) ? 'single-game' : ''}`}>
-                  {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'ruota_fortuna') && (
-                    <button className="game-btn" onClick={() => { setActiveGame('wheel'); setActiveTab('ruota'); }}>
-                      <span className="game-icon">🎡</span> Ruota Fortunata
-                    </button>
-                  )}
-                  {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'gratta_e_vinci') && (
-                    <button className="game-btn" onClick={() => { setActiveGame('scratch'); setActiveTab('ruota'); }}>
-                      <span className="game-icon">🎟️</span> Gratta e Vinci
-                    </button>
-                  )}
-                  {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'slot_machine') && (
-                    <button className="game-btn" onClick={() => { setActiveGame('slot'); setActiveTab('ruota'); }}>
-                      <span className="game-icon">🎰</span> Slot Machine
-                    </button>
+                  {!canUserPlay() ? (
+                    <div className="limit-reached-msg card-glass" style={{ gridColumn: '1 / -1', padding: '1.5rem', border: '1px solid #dc2626' }}>
+                      <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>⏳ Limite raggiunto</span>
+                      <p>Hai esaurito le giocate per questo periodo. {getRemainingTimeMsg()}</p>
+                    </div>
+                  ) : (
+                    <>
+                      {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'ruota_fortuna') && (
+                        <button className="game-btn" onClick={() => { setActiveGame('wheel'); setActiveTab('ruota'); }}>
+                          <span className="game-icon">🎡</span> Ruota Fortunata
+                        </button>
+                      )}
+                      {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'gratta_e_vinci') && (
+                        <button className="game-btn" onClick={() => { setActiveGame('scratch'); setActiveTab('ruota'); }}>
+                          <span className="game-icon">🎟️</span> Gratta e Vinci
+                        </button>
+                      )}
+                      {(appSettings?.game_type === 'all' || !appSettings?.game_type || appSettings?.game_type === 'slot_machine') && (
+                        <button className="game-btn" onClick={() => { setActiveGame('slot'); setActiveTab('ruota'); }}>
+                          <span className="game-icon">🎰</span> Slot Machine
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -234,6 +301,7 @@ function App() {
                  <Wheel 
                    onWin={handleWheelWin} 
                    settings={appSettings}
+                   canPlay={canUserPlay()}
                    onGoToWallet={() => {
                      setActiveTab('home');
                      setTimeout(() => {
@@ -247,6 +315,7 @@ function App() {
                  <ScratchCard 
                    onWin={handleWheelWin} 
                    settings={appSettings}
+                   canPlay={canUserPlay()}
                    onGoToWallet={() => {
                      setActiveTab('home');
                      setTimeout(() => {
@@ -260,6 +329,7 @@ function App() {
                  <SlotMachine 
                    onWin={handleWheelWin} 
                    settings={appSettings}
+                   canPlay={canUserPlay()}
                    onGoToWallet={() => {
                      setActiveTab('home');
                      setTimeout(() => {
