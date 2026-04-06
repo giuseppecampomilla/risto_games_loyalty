@@ -1056,7 +1056,14 @@ function ristoloyalty_register_rest_routes() {
         'callback' => 'ristoloyalty_rest_leaderboard',
         'permission_callback' => '__return_true',
     ));
+
+    register_rest_route( 'loyalty/v1', '/check-nickname/', array(
+        'methods'  => 'GET',
+        'callback' => 'ristoloyalty_rest_check_nickname',
+        'permission_callback' => '__return_true',
+    ));
 }
+
 
 // Global CORS preflight handler
 add_action('init', function() {
@@ -1103,6 +1110,33 @@ function ristoloyalty_rest_settings( $request ) {
     );
     return rest_ensure_response( $settings );
 }
+
+// GET: /wp-json/loyalty/v1/check-nickname/?nome=...&email=...
+function ristoloyalty_rest_check_nickname( $request ) {
+    global $wpdb;
+    $nome = sanitize_text_field( $request->get_param( 'nome' ) );
+    $email = sanitize_email( $request->get_param( 'email' ) );
+
+    if ( empty( $nome ) ) {
+        return rest_ensure_response( array( 'taken' => false ) ); // Invalid check, let frontend handle or ignore
+    }
+
+    $table_name = $wpdb->prefix . 'loyalty_customers';
+    
+    // Check if another user has the same name but different email
+    if ( ! empty( $email ) ) {
+        $existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE nome = %s AND email != %s", $nome, $email ) );
+    } else {
+        $existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE nome = %s", $nome ) );
+    }
+
+    if ( $existing ) {
+        return rest_ensure_response( array( 'taken' => true ) );
+    }
+
+    return rest_ensure_response( array( 'taken' => false ) );
+}
+
 
 // GET: /wp-json/ristoloyalty/v1/user-data/?email=...
 function ristoloyalty_rest_get_user_data( $request ) {
