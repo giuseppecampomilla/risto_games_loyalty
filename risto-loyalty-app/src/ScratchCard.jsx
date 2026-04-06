@@ -12,6 +12,18 @@ export default function ScratchCard({ onWin, onGoToWallet, settings, canPlay = t
   const [prize, setPrize] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [winMessage, setWinMessage] = useState('');
+  const [gameLocked, setGameLocked] = useState(false);
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setGameLocked(true);
+  };
+
+  const handleGoWallet = () => {
+    setShowModal(false);
+    setGameLocked(true);
+    if (onGoToWallet) onGoToWallet();
+  };
 
   useEffect(() => {
     // DETERMINE PRIZE BASED ON WIN CHANCE
@@ -146,7 +158,7 @@ export default function ScratchCard({ onWin, onGoToWallet, settings, canPlay = t
 
   return (
     <div className="game-container-wrapper scratch-wrapper center-content">
-      {isSubmitted ? (
+      {gameLocked ? (
         <div style={{ padding: '2rem', textAlign: 'center' }}>
            <h3 style={{ color: '#4ade80', fontSize: '1.5rem', marginBottom: '1rem' }}>Vincita Registrata!</h3>
            <p style={{ color: '#a1a1aa' }}>Hai già giocato a questo Gratta e Vinci. Torna alla Home per scegliere un altro gioco!</p>
@@ -183,11 +195,11 @@ export default function ScratchCard({ onWin, onGoToWallet, settings, canPlay = t
           <div className="modal-body">{winMessage}</div>
           
           {prize === 'Ritenta' ? (
-            <button className="modal-btn close-only" onClick={() => setShowModal(false)}>Chiudi</button>
+            <button className="modal-btn close-only" onClick={handleModalClose}>Chiudi</button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button className="modal-btn" onClick={() => { setShowModal(false); if(onGoToWallet) onGoToWallet(); }}>Vai al Wallet</button>
-              <button className="modal-btn close-only" style={{ background: 'transparent', color: '#888', padding: '8px', boxShadow: 'none', border: 'none' }} onClick={() => setShowModal(false)}>Più tardi</button>
+              <button className="modal-btn" onClick={handleGoWallet}>Vai al Wallet</button>
+              <button className="modal-btn close-only" style={{ background: 'transparent', color: '#888', padding: '8px', boxShadow: 'none', border: 'none' }} onClick={handleModalClose}>Più tardi</button>
             </div>
           )}
         </div>
