@@ -1,0 +1,462 @@
+/* ── Dashboard.css ── */
+
+/* Wrapper */
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding-bottom: 0.5rem;
+}
+
+/* ── HERO CARD ── */
+.dash-hero-card {
+  background: linear-gradient(135deg, rgba(197, 163, 93, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid var(--accent-color, rgba(251, 191, 36, 0.2));
+  border-radius: 24px;
+  padding: 1.6rem 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-hero-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, var(--accent-color, rgba(251,191,36,0.15)), transparent 70%);
+  pointer-events: none;
+}
+
+.dash-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-hero-label {
+  font-size: 0.8rem;
+  color: #a1a1aa;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dash-hero-points {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.dash-points-num {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--accent-color, #fbbf24);
+  line-height: 1;
+  text-shadow: 0 0 30px var(--accent-color, rgba(251,191,36,0.5));
+}
+
+.dash-points-unit {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #b45309;
+  letter-spacing: 1px;
+}
+
+.dash-level-badge {
+  display: inline-block;
+  background: rgba(197, 163, 93, 0.15);
+  border: 1px solid var(--accent-color, rgba(251,191,36,0.3));
+  color: var(--accent-color, #fbbf24);
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+/* Progress Ring SVG */
+.dash-hero-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.progress-ring {
+  width: 80px;
+  height: 80px;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.07);
+  stroke-width: 7;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: var(--accent-color, #fbbf24);
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: drop-shadow(0 0 6px var(--accent-color, rgba(251,191,36,0.6)));
+}
+
+.ring-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #fbbf24;
+}
+
+/* ── PROGRESS ROW ── */
+.dash-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash-progress-text {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  text-align: right;
+}
+
+.dash-progress-track {
+  height: 6px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dash-progress-fill {
+  height: 100%;
+  background: var(--accent-color, linear-gradient(90deg, #b45309, #fbbf24));
+  border-radius: 10px;
+  transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 0 8px var(--accent-color, rgba(251,191,36,0.4));
+}
+
+/* ── GAME LAUNCHERS ── */
+.dash-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.dash-action-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 1.4rem 1rem;
+  border-radius: 22px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+.dash-action-card:hover {
+  transform: translateY(-4px);
+}
+
+.dash-action-card:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.dash-action-primary {
+  background: var(--accent-color, #fbbf24);
+  color: var(--btn-text, #000);
+  box-shadow: 0 8px 25px var(--accent-color, rgba(251,191,36,0.35));
+}
+
+.dash-action-secondary {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(251,191,36,0.25) !important;
+  color: #fafafa;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.dash-action-locked {
+  background: rgba(255,255,255,0.05);
+  color: #555;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.dash-action-locked:hover {
+  transform: none;
+}
+
+.dash-action-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.dash-action-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+}
+
+.dash-action-sub {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.locked-sub {
+  color: #fbbf24;
+  opacity: 1;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.dash-action-glow {
+  position: absolute;
+  bottom: -20px; right: -20px;
+  width: 80px; height: 80px;
+  background: rgba(251,191,36,0.2);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.secondary-glow {
+  background: rgba(99,179,237,0.1);
+}
+
+/* ── SECTIONS ── */
+.dash-section {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(251,191,36,0.08);
+  border-radius: 20px;
+  padding: 1.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dash-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.3px;
+}
+
+.dash-empty {
+  text-align: center;
+  color: #52525b;
+  font-size: 0.88rem;
+  padding: 0.8rem 0;
+}
+
+/* ── WALLET SECTION ── */
+.dash-wallet-section {
+  position: relative;
+  background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(251,191,36,0.15);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.dash-wallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.dash-wallet-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: rgba(251,191,36,0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dash-wallet-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.dash-wallet-balance {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-label {
+  font-size: 0.75rem;
+  color: #71717a;
+  margin-bottom: 4px;
+}
+
+.balance-value {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fbbf24;
+}
+
+.dash-wallet-details-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.2);
+  color: #fbbf24;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dash-wallet-details-btn:hover {
+  background: rgba(251,191,36,0.2);
+  transform: translateX(4px);
+}
+
+.btn-arrow {
+  font-size: 1rem;
+}
+
+.dash-wallet-chip {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.4rem;
+  width: 40px;
+  height: 30px;
+  background: linear-gradient(135deg, #fbbf2430, #b4530930);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 6px;
+  opacity: 0.4;
+}
+
+.dash-wallet-chip::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px; height: 1px;
+  background: rgba(251,191,36,0.2);
+  box-shadow: 0 -4px 0 rgba(251,191,36,0.2), 0 4px 0 rgba(251,191,36,0.2);
+}
+
+/* Match History */
+.dash-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dash-match-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dash-match-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dash-match-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-match-vs {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.dash-match-score {
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+.dash-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.badge-win {
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74,222,128,0.3);
+}
+
+.badge-draw {
+  background: rgba(148,163,184,0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148,163,184,0.3);
+}
+
+.badge-loss {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.3);
+}
+
+/* Rewards */
+.dash-rewards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dash-reward-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dash-reward-row:last-child {
+  border-bottom: none;
+}
+
+.dash-reward-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dash-reward-code {
+  background: rgba(251,191,36,0.12);
+  color: #fbbf24;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 1px;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+  .dash-points-num { font-size: 2.4rem; }
+  .dash-actions-grid { grid-template-columns: 1fr; }
+}

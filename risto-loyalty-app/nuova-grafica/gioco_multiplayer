@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#000000",
+                        "on-primary": "#573200",
+                        "primary": "#ffad4a",
+                        "tertiary-container": "#bb6bfb",
+                        "secondary-fixed": "#26fedc",
+                        "inverse-on-surface": "#565555",
+                        "on-surface": "#ffffff",
+                        "surface": "#0e0e0e",
+                        "on-secondary-fixed": "#00483d",
+                        "surface-dim": "#0e0e0e",
+                        "surface-bright": "#2c2c2c",
+                        "inverse-surface": "#fcf9f8",
+                        "on-tertiary": "#340058",
+                        "primary-dim": "#ec9100",
+                        "background": "#0e0e0e",
+                        "surface-container-high": "#201f1f",
+                        "surface-container-highest": "#262626",
+                        "secondary-dim": "#00efce",
+                        "on-error-container": "#ffd2c8",
+                        "outline": "#767575",
+                        "tertiary-dim": "#c57eff",
+                        "on-surface-variant": "#adaaaa",
+                        "secondary-fixed-dim": "#00efce",
+                        "inverse-primary": "#895200",
+                        "on-secondary": "#005d4f",
+                        "on-tertiary-fixed-variant": "#580091",
+                        "tertiary": "#c57eff",
+                        "on-primary-container": "#492900",
+                        "secondary": "#26fedc",
+                        "error-container": "#b92902",
+                        "error": "#ff7351",
+                        "primary-container": "#fb9a02",
+                        "on-secondary-container": "#ddfff5",
+                        "on-primary-fixed-variant": "#583300",
+                        "on-background": "#ffffff",
+                        "secondary-container": "#006b5b",
+                        "surface-variant": "#262626",
+                        "on-primary-fixed": "#2b1600",
+                        "on-tertiary-container": "#1c0032",
+                        "primary-fixed": "#fe9d09",
+                        "tertiary-fixed": "#d299ff",
+                        "error-dim": "#d53d18",
+                        "outline-variant": "#484847",
+                        "surface-container-low": "#131313",
+                        "on-error": "#450900",
+                        "tertiary-fixed-dim": "#c986ff",
+                        "on-tertiary-fixed": "#280046",
+                        "primary-fixed-dim": "#ec9100",
+                        "surface-tint": "#ffad4a",
+                        "on-secondary-fixed-variant": "#006859",
+                        "surface-container": "#1a1919"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .custom-glass {
+            background: rgba(38, 38, 38, 0.6);
+            backdrop-filter: blur(20px);
+        }
+
+        .text-glow-amber {
+            text-shadow: 0 0 10px rgba(255, 173, 74, 0.5);
+        }
+
+        .neon-border-teal {
+            box-shadow: 0 0 15px rgba(38, 254, 220, 0.2);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-background font-body min-h-screen flex flex-col overflow-x-hidden selection:bg-primary selection:text-on-primary">
+    <!-- TopAppBar from JSON -->
+    <header
+        class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-neutral-950/60 backdrop-blur-xl bg-gradient-to-b from-neutral-900 to-transparent shadow-[0_10px_40px_rgba(255,173,74,0.08)]">
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <img alt="User" class="w-10 h-10 rounded-xl object-cover ring-2 ring-primary"
+                    data-alt="close-up portrait of a young man with a slight smile in a dark room illuminated by neon blue and orange light"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRjwglhMeXnkbfhfb05kLv9ao03H5j2jomnLTo2W-8LbYHLU6VnK8cjUKmVZ0tOVMsSFDPo4HCNasOFJhUDeU8Znk8oe_j6LKRjK47LsqlwPXB0Hh3iAsm9N-aO6RNCZbepUHCtOCf8RGXSttHEQgdPZMZxqvG_Gz4cAGn5GlPgexLXD-J8LzfVZCv3qBZhCgZK1a3Eoa306tuahU0C-fLEX_0uaeJr_G_oXVtPiLLV4hsvXwyu4NGPAlJ7JuEaRy8yRV3UPxUbQ" />
+                <span
+                    class="absolute -bottom-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface shadow-[0_0_8px_#26fedc]"></span>
+            </div>
+            <span
+                class="font-headline font-black text-2xl text-amber-500 tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,173,74,0.5)]">ARCADE</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div
+                class="px-4 py-1.5 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-sm"
+                    style="font-variation-settings: 'FILL' 1;">stars</span>
+                <span class="font-headline font-bold text-amber-500 tracking-tighter">1,250 PTS</span>
+            </div>
+            <button class="active:scale-95 transition-transform">
+                <span class="material-symbols-outlined text-on-surface">menu</span>
+            </button>
+        </div>
+    </header>
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 pt-4 pb-32 space-y-8">
+        <!-- Scoreboard / Team vs Team Section -->
+        <div class="grid grid-cols-7 items-center gap-2">
+            <!-- Table 4 -->
+            <div
+                class="col-span-3 flex flex-col items-center gap-3 p-4 rounded-lg bg-surface-container-low relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+                <div class="flex -space-x-3 mb-1">
+                    <img class="w-12 h-12 rounded-xl object-cover ring-2 ring-surface shadow-xl"
+                        data-alt="portrait of a man with sunglasses and neon lighting reflection"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOF_H5xBloS5q1nPkLt2J8jVzbVg1Pp6LwFv2TUrSmcpMLReQNx47XwD28Al6S7Yzi2raIem8JxK_gq8HmE2wfJ5YGu5hYflek4m0zmYYZ4zN8RikkHwujAVPmfloE6nhj6jUnErjM213ld4s9PPC7o0XxKN1h1LnXEGr1cDuxQ7tS2B8vIOP1HcvvJ6GBv86WjNQxO1_DR_0Z9P3cWU2FxfsNv7HtcI2ll-nmXYbX2I55O-6n2U_DCL-E2n8TVsgoUkLhPu3ehw" />
+                    <img class="w-12 h-12 rounded-xl object-cover ring-2 ring-surface shadow-xl"
+                        data-alt="fashionable woman in a nightclub setting with soft purple glow"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPYCCb2YTr9vwsvyjTT_D1dlaPP7CFVJe6_BKNBP9Kb9SHAoIkdZUwneT8khev-pQZeuaTfUNZp0pe4DQpNDqfK4XJRPkLSEbZwAB4Jysdhj6UMlo9mh65EA-XaAxtnEI1cGjHddqDo-WAcUqNopV1-RmnfsCK59vUr4azIeoXfOPI6qAOjU3p-c8jGY2GBd-3fNLS9bPzj7u9cwEUzrP0z0hN4OKHWQXXgpR9T5tHC8-K1Vewh2u8G9m3kEWz5zvU5RMUPlqapA" />
+                    <img class="w-12 h-12 rounded-xl object-cover ring-2 ring-surface shadow-xl"
+                        data-alt="headshot of a smiling person with colorful bokeh background"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2yeq4ZiWSEb_yQCQkfqkXbK39FoPBeCqUxi5LCMgz28PGE2Gxe2WenUD5RJokqGJmh-RI3GTVaYcvcddil02E0Gb-Uhz076Oe9RaVmofX6jDY_dJBRbQnpU2y7tseNb1A5HMHdho2c-8lKPbl0ZLtV2G64nNMFi0PCNBuotF6-66ItybeSSzQfENMrq3gfhkU51PXaTS9PTRQ5S9dNDYHZRnV1M2K5JxKhhlhl4IgTEsFYIjW2aARRL8fKv02LWU4ZXTROPVUeA" />
+                </div>
+                <h3 class="font-headline text-on-surface-variant text-xs uppercase tracking-[0.2em]">Table 04</h3>
+                <div class="font-headline text-5xl font-extrabold text-primary text-glow-amber">1,840</div>
+            </div>
+            <!-- VS Divider -->
+            <div class="col-span-1 flex flex-col items-center justify-center">
+                <div class="w-px h-12 bg-gradient-to-b from-transparent via-outline-variant/30 to-transparent"></div>
+                <div class="font-headline font-black text-xl italic text-on-surface-variant/40 my-2">VS</div>
+                <div class="w-px h-12 bg-gradient-to-t from-transparent via-outline-variant/30 to-transparent"></div>
+            </div>
+            <!-- Table 12 -->
+            <div
+                class="col-span-3 flex flex-col items-center gap-3 p-4 rounded-lg bg-surface-container-low relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-bl from-tertiary/5 to-transparent"></div>
+                <div class="flex -space-x-3 mb-1">
+                    <img class="w-12 h-12 rounded-xl object-cover ring-2 ring-surface shadow-xl"
+                        data-alt="man in a stylish dark jacket with dramatic rim lighting"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNsY6fOajcutPEj0it634fAkQvwgr3_ZhCRzFh9Mnmw_-QiLtKMSKoNf89eJleri_mIGd5lWZlwtALrafG_78965rsR9dFNWeyNQppLmDFqnwA4YDUW5kwGXlGxTj2z29raUkGEIy_Kv64NYNtvERSgXT0rlZ5PKWcMJ5SdccSFx3c6fATmaE-oaA30BbEWExgxTBfNj6DoZF3WDUBg8AITmXtSFi2xO9Axdcl5Q6c_3_4x8o6WUiTOyW_3cKPIIBSwNum5ElfQQ" />
+                    <img class="w-12 h-12 rounded-xl object-cover ring-2 ring-surface shadow-xl"
+                        data-alt="woman with red hair and glowing cybernetic makeup accents"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgkjUt5uDirsAQPidVCscM3j1GlGJvxIuit8jeaYjhwOxM-MW0qd0OKtj4jlqqIHbZNT_y50eFqdxrjn7CRfCNtgeRP5Un5SnXtjHN0spm8Nho4bIgRtmCP4OUpbYIUOfekJoZgmhwe8YJoKKKnMEjRDxbeE_0lC0u1Tg4njoxVUsk_ZUXuw_z5tEeucqXLpd5Dh6AYI-4BbD3DTBsP1s99CJow2RdykpNW3nZ67pUJ6LribBqEq44Qs_f4Vo_hDT64NW4z8vcpg" />
+                    <div
+                        class="w-12 h-12 rounded-xl bg-surface-container-highest border border-outline-variant flex items-center justify-center text-xs font-bold text-tertiary">
+                        +2</div>
+                </div>
+                <h3 class="font-headline text-on-surface-variant text-xs uppercase tracking-[0.2em]">Table 12</h3>
+                <div class="font-headline text-5xl font-extrabold text-tertiary">1,620</div>
+            </div>
+        </div>
+        <!-- Central Action / Question Area -->
+        <div
+            class="relative p-1 rounded-lg bg-gradient-to-tr from-surface-container-high via-outline-variant/20 to-surface-container-high shadow-2xl">
+            <div class="bg-surface-container-high rounded-[calc(1rem-2px)] overflow-hidden">
+                <!-- Game Image Header -->
+                <div class="relative h-48 w-full">
+                    <img alt="Music Trivia" class="w-full h-full object-cover opacity-60"
+                        data-alt="abstract visualization of music sound waves in electric blue and vibrant pink on a dark background"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqDpb8eWnHrgfOpbhVAdOP_U_2kbbw2VN3EmhSjDzwoxYm4NQqBvjH8zCCxbHv48F7ZehDgsGpU6mvwx86AIDW3vYNJt46kFogo-_Ftt0VMnsMg5G82gELjQS1WBLxV3GRtk4yDs8wn3gbo2l-uKRPiBzy-5pVdD-kuqtaEleRVmlLEjPHPPClZpvogxIKOhyJ8HJq5VBvALRZvkibsnlfKnyU5xkVOMfdInFlk3HGKTF6tBTXl1EQ2VnZkt6ygwYvIfbx1SW-gw" />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-transparent to-transparent">
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span
+                            class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/30 rounded-full text-[10px] font-bold tracking-widest uppercase">Round
+                            4: Pop Culture</span>
+                    </div>
+                    <div class="absolute bottom-4 left-0 w-full px-8 text-center">
+                        <h2 class="font-headline text-2xl md:text-4xl font-bold leading-tight">Which 80s icon famously
+                            performed at the first MTV VMAs?</h2>
+                    </div>
+                </div>
+                <!-- Timer Bar -->
+                <div class="w-full h-1.5 bg-surface-container-lowest">
+                    <div class="h-full w-2/3 bg-gradient-to-r from-secondary to-tertiary shadow-[0_0_10px_#26fedc]">
+                    </div>
+                </div>
+                <!-- Action Area -->
+                <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                        class="group flex items-center justify-between p-6 bg-surface-container-highest rounded-lg border border-outline-variant/10 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-95 text-left h-24">
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="font-headline text-2xl font-black text-outline/30 group-hover:text-primary transition-colors">A</span>
+                            <span class="font-body text-xl font-extrabold text-on-surface">Madonna</span>
+                        </div>
+                        <div
+                            class="w-8 h-8 rounded-full border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-all">
+                            <div
+                                class="w-4 h-4 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform">
+                            </div>
+                        </div>
+                    </button>
+                    <button
+                        class="group flex items-center justify-between p-6 bg-surface-container-highest rounded-lg border border-outline-variant/10 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-95 text-left h-24">
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="font-headline text-2xl font-black text-outline/30 group-hover:text-primary transition-colors">B</span>
+                            <span class="font-body text-xl font-extrabold text-on-surface">Prince</span>
+                        </div>
+                        <div
+                            class="w-8 h-8 rounded-full border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-all">
+                            <div
+                                class="w-4 h-4 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform">
+                            </div>
+                        </div>
+                    </button>
+                    <button
+                        class="group flex items-center justify-between p-6 bg-surface-container-highest rounded-lg border border-outline-variant/10 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-95 text-left h-24">
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="font-headline text-2xl font-black text-outline/30 group-hover:text-primary transition-colors">C</span>
+                            <span class="font-body text-xl font-extrabold text-on-surface">Michael Jackson</span>
+                        </div>
+                        <div
+                            class="w-8 h-8 rounded-full border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-all">
+                            <div
+                                class="w-4 h-4 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform">
+                            </div>
+                        </div>
+                    </button>
+                    <button
+                        class="group flex items-center justify-between p-6 bg-surface-container-highest rounded-lg border border-outline-variant/10 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-95 text-left h-24">
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="font-headline text-2xl font-black text-outline/30 group-hover:text-primary transition-colors">D</span>
+                            <span class="font-body text-xl font-extrabold text-on-surface">David Bowie</span>
+                        </div>
+                        <div
+                            class="w-8 h-8 rounded-full border-2 border-outline-variant group-hover:border-primary flex items-center justify-center transition-all">
+                            <div
+                                class="w-4 h-4 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform">
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Pub Mode Bonus Interaction -->
+        <div class="grid grid-cols-2 gap-6">
+            <button
+                class="flex flex-col items-center justify-center gap-2 p-6 bg-secondary/10 border border-secondary/20 rounded-lg group transition-all active:scale-95">
+                <span class="material-symbols-outlined text-4xl text-secondary"
+                    style="font-variation-settings: 'FILL' 1;">bolt</span>
+                <span class="font-headline font-black text-lg text-secondary tracking-widest uppercase">Double Or
+                    Nothing</span>
+                <span class="text-[10px] text-secondary/60 font-bold uppercase tracking-tighter">Cost: 200 PTS</span>
+            </button>
+            <button
+                class="flex flex-col items-center justify-center gap-2 p-6 bg-tertiary/10 border border-tertiary/20 rounded-lg group transition-all active:scale-95">
+                <span class="material-symbols-outlined text-4xl text-tertiary"
+                    style="font-variation-settings: 'FILL' 1;">groups</span>
+                <span class="font-headline font-black text-lg text-tertiary tracking-widest uppercase">Table
+                    Shout</span>
+                <span class="text-[10px] text-tertiary/60 font-bold uppercase tracking-tighter">Cost: 50 PTS</span>
+            </button>
+        </div>
+    </main>
+    <!-- Social Ticker Section -->
+    <div
+        class="fixed bottom-24 left-0 w-full overflow-hidden bg-surface-container-lowest/80 backdrop-blur-md py-3 border-y border-outline-variant/10 z-40">
+        <div class="flex whitespace-nowrap gap-12 animate-infinite-scroll">
+            <div class="flex items-center gap-4">
+                <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                <p class="font-label font-bold text-sm tracking-tight text-on-surface-variant"><span
+                        class="text-tertiary">TABLE 8:</span> "Someone buy Table 4 a round of water, they're on fire!"
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                <p class="font-label font-bold text-sm tracking-tight text-on-surface-variant"><span
+                        class="text-primary">VENUE GOAL:</span> 85% participation reached. 500 bonus PTS to all active
+                    players!</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                <p class="font-label font-bold text-sm tracking-tight text-on-surface-variant"><span
+                        class="text-tertiary">MODERATOR:</span> Next round starts in 45 seconds. Grab a drink!</p>
+            </div>
+            <!-- Duplicated for seamless loop -->
+            <div class="flex items-center gap-4">
+                <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                <p class="font-label font-bold text-sm tracking-tight text-on-surface-variant"><span
+                        class="text-tertiary">TABLE 8:</span> "Someone buy Table 4 a round of water, they're on fire!"
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- BottomNavBar from JSON -->
+    <nav
+        class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-4 pb-8 bg-neutral-900/90 backdrop-blur-2xl rounded-t-[3rem] shadow-[0_-15px_50px_rgba(0,0,0,0.5)]">
+        <a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined mb-1">sports_esports</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Catalog</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-amber-400 drop-shadow-[0_0_12px_rgba(255,173,74,0.8)] scale-110 active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined mb-1"
+                style="font-variation-settings: 'FILL' 1;">videogame_asset</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Play</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined mb-1">leaderboard</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Board</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined mb-1">military_tech</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Prizes</span>
+        </a>
+    </nav>
+    <style>
+        @keyframes infinite-scroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        .animate-infinite-scroll {
+            animation: infinite-scroll 20s linear infinite;
+        }
+    </style>
+</body>
+
+</html>

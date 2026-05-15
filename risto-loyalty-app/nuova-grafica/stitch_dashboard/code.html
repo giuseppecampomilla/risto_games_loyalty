@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ARCADE - Home Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#000000",
+                    "on-primary": "#573200",
+                    "primary": "#ffad4a",
+                    "tertiary-container": "#bb6bfb",
+                    "secondary-fixed": "#26fedc",
+                    "inverse-on-surface": "#565555",
+                    "on-surface": "#ffffff",
+                    "surface": "#0e0e0e",
+                    "on-secondary-fixed": "#00483d",
+                    "surface-dim": "#0e0e0e",
+                    "surface-bright": "#2c2c2c",
+                    "inverse-surface": "#fcf9f8",
+                    "on-tertiary": "#340058",
+                    "primary-dim": "#ec9100",
+                    "background": "#0e0e0e",
+                    "surface-container-high": "#201f1f",
+                    "surface-container-highest": "#262626",
+                    "secondary-dim": "#00efce",
+                    "on-error-container": "#ffd2c8",
+                    "outline": "#767575",
+                    "tertiary-dim": "#c57eff",
+                    "on-surface-variant": "#adaaaa",
+                    "secondary-fixed-dim": "#00efce",
+                    "inverse-primary": "#895200",
+                    "on-secondary": "#005d4f",
+                    "on-tertiary-fixed-variant": "#580091",
+                    "tertiary": "#c57eff",
+                    "on-primary-container": "#492900",
+                    "secondary": "#26fedc",
+                    "error-container": "#b92902",
+                    "error": "#ff7351",
+                    "primary-container": "#fb9a02",
+                    "on-secondary-container": "#ddfff5",
+                    "on-primary-fixed-variant": "#583300",
+                    "on-background": "#ffffff",
+                    "secondary-container": "#006b5b",
+                    "surface-variant": "#262626",
+                    "on-primary-fixed": "#2b1600",
+                    "on-tertiary-container": "#1c0032",
+                    "primary-fixed": "#fe9d09",
+                    "tertiary-fixed": "#d299ff",
+                    "error-dim": "#d53d18",
+                    "outline-variant": "#484847",
+                    "surface-container-low": "#131313",
+                    "on-error": "#450900",
+                    "tertiary-fixed-dim": "#c986ff",
+                    "on-tertiary-fixed": "#280046",
+                    "primary-fixed-dim": "#ec9100",
+                    "surface-tint": "#ffad4a",
+                    "on-secondary-fixed-variant": "#006859",
+                    "surface-container": "#1a1919"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Space Grotesk"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pint-glass-mask {
+            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="bg-neutral-950/60 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 shadow-[0_10px_40px_rgba(255,173,74,0.08)] bg-gradient-to-b from-neutral-900 to-transparent">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="User Profile" class="w-10 h-10 rounded-xl object-cover ring-2 ring-secondary/40" data-alt="Close-up portrait of a young man with a warm smile, soft cinematic lighting, urban evening background with neon bokeh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3e1CFV3-Pzs6-Q5c2hwB0DEsQXxTVQkd76EuFvQGRTbT2jDZmghohF9SxMkqBE_emdYtRf5qgP5Irr5SPOPXGL4DlevssQo8akR_p8flHRN66MCfak2JkAkUCJWzHJ71Da_mxVNmc_I9cqFtraOX24HiWuUtfL8jnyiuhNbq7KnhVeae3uPh_EChGhDItdhqa9u8jogsB20Z4CJVaNadW2tlSz1RdV_bI4Yr0ZjaLXvgobBVV21B-63nntNlaUOXhAqdpsfO9sQ"/>
+<div class="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface shadow-[0_0_8px_#26fedc]"></div>
+</div>
+<span class="font-headline font-black text-2xl text-amber-500 tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,173,74,0.5)] uppercase">ARCADE</span>
+</div>
+<button class="bg-surface-container-high px-4 py-2 rounded-full border border-outline-variant/15 active:scale-95 transition-transform">
+<span class="font-headline font-bold text-amber-500 tracking-tighter uppercase">1,250 PTS</span>
+</button>
+</header>
+<main class="pb-32 px-6 pt-6 max-w-5xl mx-auto space-y-12">
+<!-- Daily Quest Card (Hero) -->
+<section class="relative">
+<div class="bg-surface-container-low rounded-lg p-8 relative overflow-hidden border-l-4 border-primary">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+<div class="flex flex-col md:flex-row gap-8 items-center relative z-10">
+<div class="flex-1 space-y-6">
+<div>
+<span class="font-label text-primary font-bold tracking-widest uppercase text-xs mb-2 block">Active Mission</span>
+<h1 class="font-headline text-4xl md:text-5xl font-bold tracking-tighter leading-none mb-4">DRINK &amp; DESTROY</h1>
+<p class="text-on-surface-variant text-lg max-w-md">Score 5,000 points in any single-player game to unlock a complimentary craft pint.</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-on-primary h-[64px] px-8 rounded-lg font-bold text-xl hover:shadow-[0_0_20px_rgba(255,173,74,0.4)] active:scale-95 transition-all flex items-center justify-center gap-3">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                CLAIM REWARD
+                            </button>
+</div>
+</div>
+<!-- Pint Glass Progress -->
+<div class="flex flex-col items-center gap-4">
+<div class="relative w-24 h-40 bg-surface-container-highest rounded-t-sm pint-glass-mask border-x border-t border-outline-variant/20 shadow-inner">
+<!-- Pint Fill -->
+<div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-secondary to-secondary-dim transition-all duration-1000" style="height: 75%;">
+<!-- Fizz Bubbles -->
+<div class="absolute top-1 left-2 w-1.5 h-1.5 bg-on-secondary-container/60 rounded-full animate-bounce"></div>
+<div class="absolute top-3 left-8 w-1 h-1 bg-on-secondary-container/40 rounded-full animate-pulse"></div>
+<div class="absolute top-2 right-4 w-2 h-2 bg-on-secondary-container/50 rounded-full"></div>
+<!-- Head of the Beer -->
+<div class="absolute -top-1 left-0 w-full h-2 bg-white/20 blur-sm"></div>
+</div>
+</div>
+<div class="text-center">
+<span class="font-headline font-bold text-2xl text-secondary">75%</span>
+<span class="block text-[10px] font-label text-on-surface-variant uppercase tracking-[0.2em]">Pint Progress</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Popular Games (Bento Grid) -->
+<section class="space-y-6">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline text-3xl font-bold tracking-tighter uppercase">Popular Games</h2>
+<p class="text-on-surface-variant text-sm uppercase tracking-widest font-label">Solo Missions</p>
+</div>
+<button class="text-primary font-bold text-sm hover:underline">VIEW ALL</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Large Card -->
+<div class="md:col-span-2 relative group cursor-pointer overflow-hidden rounded-lg bg-surface-container-low border border-outline-variant/10">
+<img alt="Retro Arcade" class="w-full h-72 object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="Retro 80s synthwave style arcade machine in a dimly lit room with vibrant pink and teal neon lights and grid patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA55uoEB5BczWEcCcYprTHWHKN2ifQZva_E9zE1NlaPk0Sz1Lzp6ZtSTh22dYBEuS5cGb__vz_KwMK6KBScLQ2-OG1cyNakLi1-bhya7gP_SZO-Iloxc9HhdHyxDZ0C2qxuzcmO0YiHMF6O24YrX04K9X98YhCdd5Xuw_TU_-25EHUiQceMWGfKt1mMtoJ9Uw5qFIG9b1-4BBmWmB0lV28jSy81p9iqfKGnYOEa7nYax43MsuYeHD6W4Q0a3vQ4PM-2ZazdgfUtlA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-8 space-y-2">
+<div class="flex items-center gap-2 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full w-fit">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-tighter">Hot Streak</span>
+</div>
+<h3 class="font-headline text-3xl font-extrabold tracking-tighter">NEON RIDER 2049</h3>
+<div class="flex items-center gap-4 text-on-surface-variant font-label text-xs tracking-widest uppercase">
+<span>High Score: 840,200</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span>2.4k Playing</span>
+</div>
+</div>
+</div>
+<!-- Vertical Card -->
+<div class="bg-surface-container-high rounded-lg p-6 flex flex-col justify-between border border-outline-variant/10 relative group cursor-pointer">
+<div class="space-y-4">
+<div class="w-16 h-16 bg-tertiary/10 rounded-xl flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">casino</span>
+</div>
+<div>
+<h3 class="font-headline text-xl font-bold uppercase tracking-tighter">BITCOIN BLAST</h3>
+<p class="text-on-surface-variant text-sm mt-1">Earn real crypto fragments in this fast-paced puzzler.</p>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/10 flex justify-between items-center">
+<span class="font-label text-[10px] text-tertiary font-bold tracking-widest">RARE REWARDS</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Table Challenges -->
+<section class="space-y-6">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline text-3xl font-bold tracking-tighter uppercase text-secondary">Table Challenges</h2>
+<p class="text-on-surface-variant text-sm uppercase tracking-widest font-label">Multiplayer Mayhem</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Multiplayer Card 1 -->
+<div class="bg-surface-container-low rounded-lg p-1 flex items-stretch border border-outline-variant/10">
+<div class="w-1/3 min-h-[160px] relative overflow-hidden rounded-l-md">
+<img alt="Social Gaming" class="w-full h-full object-cover" data-alt="Overhead view of friends hands playing a board game on a wooden table with pints of beer and warm atmospheric lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZgQtpXoqZaKak15j_pAnPqByRdztvEo_Wf4tj_wpFBKULWC1GtkRD7ZR1G9hMc5bDPPVfye7qSl8PWS5HJhoTmBhaLfW6aUqElqDlB6ndqHC_K6TV3U6YmQNfk5JGsoI_tpMNUeNygQR_xFxpzeoXqpzxybcHU_hE2ofZrUwdexggpHUflpN8n4EHpMufT4Q6dJfIRr_rqna08TycPKv-h4tQ6E1cPX7fGxkLm4jLaSTiY7Q22kNedv_8bNtDYqteRMFoTSbgzg"/>
+<div class="absolute inset-0 bg-secondary/10"></div>
+</div>
+<div class="flex-1 p-6 flex flex-col justify-center">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline text-xl font-bold uppercase tracking-tighter">TRIVIA TITANS</h3>
+<span class="bg-secondary/20 text-secondary text-[10px] px-2 py-0.5 rounded font-bold uppercase">Table 12</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-4">Challenge your table neighbors to a quick 5-round battle.</p>
+<div class="flex -space-x-3">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-neutral-700"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-neutral-600"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-neutral-500"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-secondary flex items-center justify-center text-[10px] font-bold text-on-secondary">+4</div>
+</div>
+</div>
+</div>
+<!-- Multiplayer Card 2 -->
+<div class="bg-surface-container-low rounded-lg p-1 flex items-stretch border border-outline-variant/10">
+<div class="w-1/3 min-h-[160px] relative overflow-hidden rounded-l-md">
+<img alt="Cards Game" class="w-full h-full object-cover" data-alt="Digital stylized card game illustration with glowing neon borders and futuristic interface elements" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3Sx1Ff5gl35oVsFZytwACL482qXGl2dWzbRYoncbrSEp1VeGY_Koms3uE7XiPDwEq8nPrQf1cwxWkxhhlB3vZMGzr8n1uLhd7U16qPNetqz1JjgRWWuqXgOTDDXlRy_GyYwqDz9_nTFTVnKYYMgkun6teM-sPHQHp3yQR_8Ar-LJcKnngPBKqsTvLvuDZFdLVpm0OnxnxySxowrHCQPBwsIwhX-uDut7TrNkAPQYpq-vfVHrD_pujeoyTf_PbHbLzzngKeuZvug"/>
+<div class="absolute inset-0 bg-secondary/10"></div>
+</div>
+<div class="flex-1 p-6 flex flex-col justify-center">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline text-xl font-bold uppercase tracking-tighter">ROUGE POKER</h3>
+<span class="bg-secondary/20 text-secondary text-[10px] px-2 py-0.5 rounded font-bold uppercase">LIVE</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-4">No chips, just pride. Winning table gets 10% off their tab.</p>
+<button class="w-fit text-secondary font-bold text-xs flex items-center gap-1 uppercase tracking-widest hover:gap-2 transition-all">
+                            JOIN TABLE <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-4 pb-8 bg-neutral-900/90 backdrop-blur-2xl shadow-[0_-15px_50px_rgba(0,0,0,0.5)] rounded-t-[3rem]">
+<a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">sports_esports</span>
+<span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Catalog</span>
+</a>
+<a class="flex flex-col items-center justify-center text-amber-400 drop-shadow-[0_0_12px_rgba(255,173,74,0.8)] scale-110 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl mb-1" style="font-variation-settings: 'FILL' 1;">videogame_asset</span>
+<span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Play</span>
+</a>
+<a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">leaderboard</span>
+<span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">military_tech</span>
+<span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Prizes</span>
+</a>
+</nav>
+<!-- FAB (Contextual for Home) -->
+<button class="fixed bottom-28 right-6 w-16 h-16 bg-primary text-on-primary rounded-xl shadow-[0_10px_30px_rgba(255,173,74,0.3)] flex items-center justify-center z-40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+</button>
+</body></html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#000000",
+                        "on-primary": "#573200",
+                        "primary": "#ffad4a",
+                        "tertiary-container": "#bb6bfb",
+                        "secondary-fixed": "#26fedc",
+                        "inverse-on-surface": "#565555",
+                        "on-surface": "#ffffff",
+                        "surface": "#0e0e0e",
+                        "on-secondary-fixed": "#00483d",
+                        "surface-dim": "#0e0e0e",
+                        "surface-bright": "#2c2c2c",
+                        "inverse-surface": "#fcf9f8",
+                        "on-tertiary": "#340058",
+                        "primary-dim": "#ec9100",
+                        "background": "#0e0e0e",
+                        "surface-container-high": "#201f1f",
+                        "surface-container-highest": "#262626",
+                        "secondary-dim": "#00efce",
+                        "on-error-container": "#ffd2c8",
+                        "outline": "#767575",
+                        "tertiary-dim": "#c57eff",
+                        "on-surface-variant": "#adaaaa",
+                        "secondary-fixed-dim": "#00efce",
+                        "inverse-primary": "#895200",
+                        "on-secondary": "#005d4f",
+                        "on-tertiary-fixed-variant": "#580091",
+                        "tertiary": "#c57eff",
+                        "on-primary-container": "#492900",
+                        "secondary": "#26fedc",
+                        "error-container": "#b92902",
+                        "error": "#ff7351",
+                        "primary-container": "#fb9a02",
+                        "on-secondary-container": "#ddfff5",
+                        "on-primary-fixed-variant": "#583300",
+                        "on-background": "#ffffff",
+                        "secondary-container": "#006b5b",
+                        "surface-variant": "#262626",
+                        "on-primary-fixed": "#2b1600",
+                        "on-tertiary-container": "#1c0032",
+                        "primary-fixed": "#fe9d09",
+                        "tertiary-fixed": "#d299ff",
+                        "error-dim": "#d53d18",
+                        "outline-variant": "#484847",
+                        "surface-container-low": "#131313",
+                        "on-error": "#450900",
+                        "tertiary-fixed-dim": "#c986ff",
+                        "on-tertiary-fixed": "#280046",
+                        "primary-fixed-dim": "#ec9100",
+                        "surface-tint": "#ffad4a",
+                        "on-secondary-fixed-variant": "#006859",
+                        "surface-container": "#1a1919"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glow-primary {
+            filter: drop-shadow(0 0 12px rgba(255, 173, 74, 0.4));
+        }
+
+        .glow-secondary {
+            filter: drop-shadow(0 0 12px rgba(38, 254, 220, 0.4));
+        }
+
+        .glow-tertiary {
+            filter: drop-shadow(0 0 12px rgba(197, 126, 255, 0.4));
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary">
+    <!-- TopAppBar -->
+    <header
+        class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-neutral-950/60 backdrop-blur-xl bg-gradient-to-b from-neutral-900 to-transparent shadow-[0_10px_40px_rgba(255,173,74,0.08)]">
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-secondary/40">
+                    <img class="w-full h-full object-cover"
+                        data-alt="close-up portrait of a young man with a slight smile in a neon-lit cyberpunk environment with teal and amber reflections"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfcagP3qwFmar2mujMoIqItlmyXMY2RIlDVufjG1i5ct54u5OKUM3JJUTEp5Sfm08384zpANtIhregBPchxkLYEGC-PnYDWQxIpCCM0Hg9bnC7z_XrIBUILs8KxgUKBKnJhc9JFIE7pdrlVOD_zyupVk9Ot_xmaP21_qloXdVh1ghAon2LtmJdAeoWA1XmYapiTQIkA8fbAQWEfktmXEps9z0R30jwh8udwjVM-shXWmlrIpiM2nFp4w_IiWlRmqsYhu5JD1IxmQ" />
+                </div>
+                <div
+                    class="absolute -bottom-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface glow-secondary">
+                </div>
+            </div>
+            <span
+                class="text-2xl font-black text-amber-500 tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,173,74,0.5)] font-['Space_Grotesk'] uppercase">ARCADE</span>
+        </div>
+        <div
+            class="px-4 py-2 bg-surface-container-high rounded-full border border-outline-variant/20 flex items-center gap-2 active:scale-95 transition-transform cursor-pointer">
+            <span class="material-symbols-outlined text-primary text-sm"
+                style="font-variation-settings: 'FILL' 1;">stars</span>
+            <span class="text-primary font-['Space_Grotesk'] font-bold tracking-tighter uppercase">1,250 PTS</span>
+        </div>
+    </header>
+    <main class="pb-32">
+        <!-- Hall of Fame Hero -->
+        <section class="px-6 pt-8 pb-12 overflow-hidden relative">
+            <div
+                class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_0%,_rgba(255,173,74,0.15)_0%,_transparent_70%)] pointer-events-none">
+            </div>
+            <div class="text-center mb-12 relative z-10">
+                <h1 class="text-display-lg font-headline font-bold text-on-surface tracking-tight mb-2">Hall of Fame
+                </h1>
+                <p class="text-on-surface-variant font-medium tracking-wide uppercase text-xs">Season 04 • The Electric
+                    Afterglow</p>
+            </div>
+            <!-- Podiums -->
+            <div class="flex items-end justify-center gap-4 max-w-lg mx-auto relative z-10">
+                <!-- 2nd Place -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="relative mb-4 group">
+                        <div
+                            class="w-20 h-20 rounded-xl overflow-hidden border-2 border-outline-variant p-1 bg-surface-container-high active:scale-95 transition-transform">
+                            <img class="w-full h-full object-cover rounded-lg"
+                                data-alt="man with stylish haircut and glasses looking at camera with colorful ambient studio lighting"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqWjnCcRuhoO731h9HMjWffnY5xhF-vViwyMVv3AKdiRuMlrCz1FWuNgKNEMGNGP0iz_A9AkB2hji1YDixvp12ms2v8E3x7RX3ggIhk07NSYxrPa2yk_b71eZOSvSBKhfdKKdt9JbP1kkImh7Fpo6JZtk7cE3eyzIuF6d_qhpret84Z7IhfZAzZGvZSR1Hapky3EJdVcPL4DbZy5jrRWEDn6dUL__Y13PxZfgNj2j2ft3DYqFTdmOTBu-jhioW-nfenwv85oGFxA" />
+                        </div>
+                        <div
+                            class="absolute -top-3 -right-3 bg-surface-container-highest p-1.5 rounded-full border border-outline-variant glow-primary">
+                            <span class="material-symbols-outlined text-outline text-lg">military_tech</span>
+                        </div>
+                    </div>
+                    <div
+                        class="w-full h-24 bg-surface-container-high rounded-t-lg flex flex-col items-center justify-start pt-4 border-x border-t border-outline-variant/10">
+                        <span class="text-on-surface font-headline font-bold text-lg">Alex.V</span>
+                        <span class="text-outline text-[10px] font-bold uppercase tracking-widest">8,940</span>
+                    </div>
+                </div>
+                <!-- 1st Place -->
+                <div class="flex flex-col items-center flex-1 -translate-y-4">
+                    <div class="relative mb-4">
+                        <div class="absolute -inset-4 bg-primary/20 blur-2xl rounded-full"></div>
+                        <div
+                            class="relative w-28 h-28 rounded-xl overflow-hidden border-2 border-primary p-1 bg-surface-container-high active:scale-95 transition-transform">
+                            <img class="w-full h-full object-cover rounded-lg"
+                                data-alt="smiling young woman with high bun in vibrant urban lighting with purple and pink highlights"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzM2tYT82TBDINo_b84SYGp2gEqLl5Vj2OdRDrcCMDjdEGEeAvTyGt59Ed8va6DTB3xMx1u5pErYbLAtbLZ-qdFy1k4fzZWVv3dhI6VodHcCkGydKk-iwjddzjxDjLuxfVje64WIJA0vEobtoDbbvuo0T4_FUKbovebnq2SDypydt8UYelNggyV2j4Cz4bibecOlhKntOfbm65FWk4XvNHTkMwGQSnRC2rSN4f9OKlA0UlY1iKjhoVnoYG0fLczMIZ86SLA6nKiA" />
+                        </div>
+                        <div
+                            class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary p-2 rounded-full glow-primary">
+                            <span class="material-symbols-outlined text-xl"
+                                style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                        </div>
+                    </div>
+                    <div
+                        class="w-full h-32 bg-primary/10 backdrop-blur-md rounded-t-xl flex flex-col items-center justify-start pt-4 border-x border-t border-primary/30">
+                        <span class="text-primary font-headline font-black text-xl">Luna_9</span>
+                        <span
+                            class="text-primary-container text-[11px] font-bold uppercase tracking-widest">12,250</span>
+                    </div>
+                </div>
+                <!-- 3rd Place -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="relative mb-4">
+                        <div
+                            class="w-16 h-16 rounded-xl overflow-hidden border-2 border-tertiary-container/40 p-1 bg-surface-container-high active:scale-95 transition-transform">
+                            <img class="w-full h-full object-cover rounded-lg"
+                                data-alt="portrait of a man with beard in warm sunset lighting with cinematic bokeh background"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAd3Z08dxRSvdmQ9ds-wwS7vF0_6RPjxJUFfW9z5t5wPF4IYS2rz3l3QbhuW1KZE3B1uXbXwvu4T7m83gqWHF-aeX4SU8ZMqybRiJWOfhT3hjPPM9E9qKVakKPZAljID2rscxsSE1H6KL4nk0m9Op1DPCBZGMXBK0RkZtCxsm5hFyHaAQBvP6KDf_asmQlLELNY0gQK4pFSduGnizFomjHq9O-icWhSdjsw_f_0zHQ4-LNGWjKJSmoi7UrfGrCOCMGap5JFOjPX5A" />
+                        </div>
+                        <div
+                            class="absolute -top-3 -left-3 bg-surface-container-highest p-1.5 rounded-full border border-tertiary-container/30 glow-tertiary">
+                            <span class="material-symbols-outlined text-tertiary text-lg">emoji_events</span>
+                        </div>
+                    </div>
+                    <div
+                        class="w-full h-16 bg-surface-container-high rounded-t-lg flex flex-col items-center justify-start pt-3 border-x border-t border-outline-variant/10">
+                        <span class="text-on-surface font-headline font-bold text-base">Jax.D</span>
+                        <span class="text-outline text-[10px] font-bold uppercase tracking-widest">7,210</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Prizes Grid -->
+        <section class="px-6 space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-headline-md font-headline font-bold tracking-tight">Active Prizes</h2>
+                <span class="text-secondary text-xs font-bold font-headline tracking-widest uppercase">3 Days
+                    Left</span>
+            </div>
+            <!-- Bento Prizes -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Prize 1: Large -->
+                <div
+                    class="col-span-2 relative bg-surface-container-low rounded-lg p-6 border border-outline-variant/10 overflow-hidden group">
+                    <div
+                        class="absolute top-0 right-0 w-48 h-full opacity-30 group-hover:opacity-50 transition-opacity">
+                        <img class="w-full h-full object-cover"
+                            data-alt="close-up of a vibrant cocktail with ice and garnish in a crystal glass under moody blue neon light"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmNHqs1wmgm4apTj_0HBwPJ6HdBunWosVHXcs3JvdisaXSTo3DQfVd0x3Tzvk9nRCU7V2R1FfSFOHGwYiWA8AKV-x35Plq1SbG1MAsf4hu62Ah4lMkRlWrWD6mH7rcv_AGD0iim11Zr-CuXaOTyzxu90BYWomW9sfRb7_cFCNzRrItLsmOpF-zCBJ87uzfiw1nL66KcnFNjmUL4CluZM9_uA7Cib34WwyTn4Ar4b4aK0Y0mxRLbUWAlquyMBt1L44XylffCMFXEA" />
+                    </div>
+                    <div class="relative z-10 flex flex-col h-full justify-between gap-8">
+                        <div>
+                            <span
+                                class="px-2 py-1 bg-tertiary/20 text-tertiary text-[10px] font-bold rounded-full mb-3 inline-block uppercase tracking-widest">Grand
+                                Prize</span>
+                            <h3 class="text-2xl font-headline font-bold text-on-surface leading-tight">Next
+                                Round's<br />On the House</h3>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button
+                                class="bg-primary text-on-primary px-6 py-3 rounded-lg font-bold text-sm tracking-tight active:scale-95 transition-transform">Claim
+                                for 5k</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Prize 2: Medium -->
+                <div
+                    class="bg-surface-container-high rounded-lg p-5 border border-outline-variant/5 flex flex-col justify-between aspect-square">
+                    <span class="material-symbols-outlined text-secondary text-3xl mb-4"
+                        style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                    <div>
+                        <h4 class="font-headline font-bold text-lg mb-1 leading-tight">Free Loaded Fries</h4>
+                        <p class="text-outline text-[10px] font-bold uppercase tracking-widest">1,200 PTS</p>
+                    </div>
+                </div>
+                <!-- Prize 3: Medium -->
+                <div
+                    class="bg-surface-container-high rounded-lg p-5 border border-outline-variant/5 flex flex-col justify-between aspect-square">
+                    <span class="material-symbols-outlined text-primary text-3xl mb-4"
+                        style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+                    <div>
+                        <h4 class="font-headline font-bold text-lg mb-1 leading-tight">VIP Booth Entry</h4>
+                        <p class="text-outline text-[10px] font-bold uppercase tracking-widest">2,500 PTS</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- How to Win Section -->
+        <section class="mt-12 px-6">
+            <div
+                class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/20 relative overflow-hidden">
+                <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[80px] rounded-full"></div>
+                <h2 class="text-xl font-headline font-black tracking-tight mb-8 relative z-10 uppercase">How to Win</h2>
+                <div class="space-y-8 relative z-10">
+                    <div class="flex gap-5">
+                        <div
+                            class="flex-shrink-0 w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center border border-outline-variant/20 text-primary font-headline font-bold text-xl">
+                            1</div>
+                        <div>
+                            <h4 class="font-bold text-on-surface mb-1">Scan to Start</h4>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">Find the QR code on your table to
+                                sync your session to the live leaderboard.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-5">
+                        <div
+                            class="flex-shrink-0 w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center border border-outline-variant/20 text-secondary font-headline font-bold text-xl">
+                            2</div>
+                        <div>
+                            <h4 class="font-bold text-on-surface mb-1">Win Mini-Games</h4>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">Participate in table battles and
+                                trivia rounds to rack up high-octane points.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-5">
+                        <div
+                            class="flex-shrink-0 w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center border border-outline-variant/20 text-tertiary font-headline font-bold text-xl">
+                            3</div>
+                        <div>
+                            <h4 class="font-bold text-on-surface mb-1">Claim your Glory</h4>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">Cash in your points for digital
+                                rewards or physical perks at the bar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Bottom Spacing -->
+        <div class="h-10"></div>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-4 pb-8 bg-neutral-900/90 backdrop-blur-2xl rounded-t-[3rem] shadow-[0_-15px_50px_rgba(0,0,0,0.5)]">
+        <!-- Catalog -->
+        <a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined text-2xl mb-1">sports_esports</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Catalog</span>
+        </a>
+        <!-- Play -->
+        <a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined text-2xl mb-1">videogame_asset</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Play</span>
+        </a>
+        <!-- Board (Active) -->
+        <a class="flex flex-col items-center justify-center text-amber-400 drop-shadow-[0_0_12px_rgba(255,173,74,0.8)] scale-110 active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined text-2xl mb-1"
+                style="font-variation-settings: 'FILL' 1;">leaderboard</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Board</span>
+        </a>
+        <!-- Prizes -->
+        <a class="flex flex-col items-center justify-center text-neutral-600 hover:text-neutral-300 transition-all active:scale-90 duration-200"
+            href="#">
+            <span class="material-symbols-outlined text-2xl mb-1">military_tech</span>
+            <span class="font-['Manrope'] font-extrabold text-[10px] tracking-widest uppercase">Prizes</span>
+        </a>
+    </nav>
+</body>
+
+</html>

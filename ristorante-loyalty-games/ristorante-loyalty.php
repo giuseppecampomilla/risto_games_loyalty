@@ -38,6 +38,8 @@ function ristorante_loyalty_create_table() {
         punti mediumint(9) DEFAULT 0 NOT NULL,
         punti_totali mediumint(9) DEFAULT 0 NOT NULL,
         ultimo_gioco datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        is_verified tinyint(1) DEFAULT 0 NOT NULL,
+        verification_code varchar(20) NULL,
         PRIMARY KEY  (id),
         UNIQUE KEY email (email)
     ) $charset_collate;";
@@ -117,6 +119,22 @@ function ristorante_loyalty_upgrade_db() {
             $wpdb->query("UPDATE $table SET punti_totali = punti WHERE punti_totali = 0");
         }
         update_option('loyalty_db_version', '2.3');
+        $current_version = '2.3';
+    }
+
+    // Upgrade a 2.4: aggiunge colonna is_verified e verification_code
+    if ( version_compare($current_version, '2.4', '<') ) {
+        $table = $wpdb->prefix . 'loyalty_customers';
+        $cols  = $wpdb->get_col("SHOW COLUMNS FROM $table");
+        if ( ! in_array('is_verified', $cols) ) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN is_verified TINYINT(1) DEFAULT 0 NOT NULL");
+            // I vecchi utenti sono considerati già verificati
+            $wpdb->query("UPDATE $table SET is_verified = 1");
+        }
+        if ( ! in_array('verification_code', $cols) ) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN verification_code VARCHAR(20) NULL");
+        }
+        update_option('loyalty_db_version', '2.4');
     }
 }
 
@@ -176,9 +194,11 @@ function ristorante_loyalty_register_settings() {
     register_setting( 'ristorante_loyalty_options', 'loyalty_points_per_play' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_signup_bonus' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_win_chance' );
-    register_setting( 'ristorante_loyalty_options', 'loyalty_prize_1' );
-    register_setting( 'ristorante_loyalty_options', 'loyalty_prize_2' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_prize_3' );
+    // Multiplayer
+    register_setting( 'ristorante_loyalty_options', 'loyalty_multiplayer_win_bonus' );
+    register_setting( 'ristorante_loyalty_options', 'loyalty_multiplayer_click_pts' );
+    register_setting( 'ristorante_loyalty_options', 'loyalty_multiplayer_target_clicks' );
     // Limite giocate
     register_setting( 'ristorante_loyalty_options', 'loyalty_max_plays' );
     register_setting( 'ristorante_loyalty_options', 'loyalty_play_period' );
@@ -333,11 +353,28 @@ function ristorante_loyalty_settings_page() {
                         <td><input type="text" name="loyalty_prize_2" value="<?php echo esc_attr( get_option('loyalty_prize_2', '') ); ?>" class="regular-text" /></td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Premio 3 (Es: Dolce Omag.)</th>
-                        <td><input type="text" name="loyalty_prize_3" value="<?php echo esc_attr( get_option('loyalty_prize_3', '') ); ?>" class="regular-text" /></td>
+                        <th scope="row">🎯 Chance di Vincita (%)</th>
+                        <td><input type="number" name="loyalty_win_chance" value="<?php echo esc_attr(get_option('loyalty_win_chance', 20)); ?>" step="1" min="0" max="100" /></td>
                     </tr>
-
-                    <tr><td colspan="2"><hr><h2 style="margin:0;">🏆 Traguardi Punti (Fidelity)</h2></td></tr>
+                    <tr><td colspan="2"><hr/></td></tr>
+                    <tr><td colspan="2"><h2 style="margin:0;">⚔️ Sfida Multiplayer</h2></td></tr>
+                    <tr valign="top">
+                        <th scope="row">🏆 Bonus Vittoria Multiplayer (PT)</th>
+                        <td><input type="number" name="loyalty_multiplayer_win_bonus" value="<?php echo esc_attr(get_option('loyalty_multiplayer_win_bonus', 500)); ?>" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">🖱️ Moltiplicatore Click (Punti x Click)</th>
+                        <td><input type="number" name="loyalty_multiplayer_click_pts" value="<?php echo esc_attr(get_option('loyalty_multiplayer_click_pts', 10)); ?>" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">🏁 Lunghezza Gara (Numero Blocchi Totem)</th>
+                        <td>
+                            <input type="number" name="loyalty_multiplayer_target_clicks" min="10" max="500" value="<?php echo esc_attr(get_option('loyalty_multiplayer_target_clicks', 60)); ?>" />
+                            <p class="description">Numero di click necessari per vincere la sfida (Default: 60).</p>
+                        </td>
+                    </tr>
+                    <tr><td colspan="2"><hr/></td></tr>
+                    <tr><td colspan="2"><h2 style="margin:0;">🏆 Traguardi Punti (Fidelity)</h2></td></tr>
                     <?php for ($i = 1; $i <= 3; $i++) : ?>
                     <tr valign="top">
                         <th scope="row">Soglia <?php echo $i; ?></th>
@@ -507,6 +544,7 @@ function ristorante_loyalty_customers_page() {
                 <h2 style="margin-top:0;font-size:1.5rem;border-bottom:1px solid #eee;padding-bottom:10px;">Dati Profilo</h2>
                 <p><strong>Nome:</strong> <?php echo esc_html($c->nome); ?></p>
                 <p><strong>Email:</strong> <?php echo esc_html($c->email); ?></p>
+                <p><strong>Email Verificata (OTP):</strong> <?php echo isset($c->is_verified) && $c->is_verified == 1 ? '✅ Sì' : '❌ No'; ?></p>
                 <p><strong>Punti Attuali:</strong> <span style="background:#FFD700;color:#000;font-weight:bold;padding:3px 8px;border-radius:12px;"><?php echo esc_html($c->punti); ?></span></p>
                 <p><strong>Ultimo Gioco:</strong> <?php echo esc_html(date_i18n('d F Y H:i', strtotime($c->ultimo_gioco))); ?></p>
                 <p><strong>Giocate nel periodo corrente:</strong> <?php echo esc_html($c->play_count); ?></p>
@@ -550,6 +588,7 @@ function ristorante_loyalty_customers_page() {
                     <th>ID</th>
                     <th>Nome</th>
                     <th>Email</th>
+                    <th>Verificato</th>
                     <th>Punti</th>
                     <th>Ultimo Gioco</th>
                     <th>Azioni</th>
@@ -561,6 +600,7 @@ function ristorante_loyalty_customers_page() {
                         <td><?php echo esc_html($c->id); ?></td>
                         <td><strong><?php echo esc_html($c->nome); ?></strong></td>
                         <td><?php echo esc_html($c->email); ?></td>
+                        <td style="text-align: center;"><?php echo isset($c->is_verified) && $c->is_verified == 1 ? '✅' : '❌'; ?></td>
                         <td><span style="background:#FFD700;color:#000;font-weight:bold;padding:2px 6px;border-radius:10px;"><?php echo esc_html($c->punti); ?></span></td>
                         <td><?php echo esc_html(date_i18n('d/m/Y H:i', strtotime($c->ultimo_gioco))); ?></td>
                         <td>
@@ -568,7 +608,7 @@ function ristorante_loyalty_customers_page() {
                         </td>
                     </tr>
                 <?php endforeach; else: ?>
-                    <tr><td colspan="6">Nessun cliente registrato oppure plugin non ancora attivato.</td></tr>
+                    <tr><td colspan="7">Nessun cliente registrato oppure plugin non ancora attivato.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -689,9 +729,17 @@ function ristorante_loyalty_leaderboard_admin_page() {
     $reset_msg = '';
     if ( isset($_POST['lb_reset_nonce']) && wp_verify_nonce($_POST['lb_reset_nonce'], 'lb_reset_action') ) {
         if ( current_user_can('manage_options') ) {
-            $wpdb->query("UPDATE $table SET punti = 0");
+            $reset_totali = isset($_POST['reset_totali']) && $_POST['reset_totali'] === '1';
+            
+            if ( $reset_totali ) {
+                $wpdb->query("UPDATE $table SET punti = 0, punti_totali = 0");
+                $reset_msg = '<div class="notice notice-success is-dismissible"><p>✅ Classifica e Punti Totali azzerati con successo!</p></div>';
+            } else {
+                $wpdb->query("UPDATE $table SET punti = 0");
+                $reset_msg = '<div class="notice notice-success is-dismissible"><p>✅ Classifica azzerata! I punti totali storici sono stati preservati.</p></div>';
+            }
+            
             update_option('loyalty_leaderboard_last_reset', current_time('mysql'));
-            $reset_msg = '<div class="notice notice-success is-dismissible"><p>✅ Classifica azzerata! I punti totali storici sono stati preservati.</p></div>';
         }
     }
 
@@ -747,8 +795,17 @@ function ristorante_loyalty_leaderboard_admin_page() {
                     <?php if ($last_reset): ?>
                     <p style="font-size:.85rem;color:#888;">Ultimo reset: <strong><?php echo date_i18n('d/m/Y H:i', strtotime($last_reset)); ?></strong></p>
                     <?php endif; ?>
-                    <form method="post" onsubmit="return confirm('Sei sicuro? Questa operazione azzera i punti di TUTTI i clienti.');">
+                    <form method="post" onsubmit="return confirm('Sei sicuro? Questa operazione azzererà i punti selezionati per TUTTI i clienti.');">
                         <?php wp_nonce_field('lb_reset_action', 'lb_reset_nonce'); ?>
+                        
+                        <div style="margin: 1rem 0; padding: 10px; background: #f9f9f9; border-radius: 4px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; color: #d63638; font-weight: bold;">
+                                <input type="checkbox" name="reset_totali" value="1" style="margin-right: 8px;" />
+                                Azzera anche Punti Totali Storici
+                            </label>
+                            <p class="description" style="margin-top: 5px; font-size: 0.8rem;">Seleziona per pulire completamente la classifica (consigliato dopo i test).</p>
+                        </div>
+
                         <button type="submit" class="button button-primary" style="background:#d63638;border-color:#d63638;width:100%;">
                             🗑️ Azzera Classifica
                         </button>

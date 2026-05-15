@@ -1,0 +1,40 @@
+# Dipendenze Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build e file generati (Frontend)
+dist/
+dist-ssr/
+build/
+
+# Variabili d'ambiente (MOLTO IMPORTANTE NON CARICARLE)
+.env
+.env.local
+.env.*.local
+
+# File di configurazione di sistema (Mac/Windows)
+.DS_Store
+Thumbs.db
+
+# File di Log
+*.log
+logs
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Chiavi SSH e certificati (Sicurezza)
+*.key
+*.pem
+*.pub
+
+# File dell'editor/IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

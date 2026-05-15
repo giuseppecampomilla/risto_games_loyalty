@@ -66,3 +66,12 @@ sitemap.xml.gz
 *.tar.gz
 dist/
 build/
+
+# =========================
+# Secrets and Keys
+# =========================
+*.pem
+*.key
+*.rtf
+token_github.rtf
+

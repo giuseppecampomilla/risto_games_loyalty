@@ -1,0 +1,38 @@
+services:
+  # MongoDB per il multiplayer
+  mongodb:
+    image: mongo:latest
+    container_name: loyalty-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  # Multiplayer Server (Node.js)
+  multiplayer:
+    build: ./multiplayer
+    container_name: loyalty-multiplayer
+    ports:
+      - "${MULTIPLAYER_PORT:-3000}:3000"
+    environment:
+      - WP_API_URL=${WP_API_URL}
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - MONGO_URI=mongodb://mongodb:27017/multiplayerDB
+    depends_on:
+      - mongodb
+
+  # Frontend (Nginx + React Build)
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE_URL=${WP_API_URL}
+        - VITE_MULTIPLAYER_URL=${VITE_MULTIPLAYER_URL}
+    container_name: loyalty-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - multiplayer
+
+volumes:
+  mongo-data:
